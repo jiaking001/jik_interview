@@ -62,10 +62,10 @@ func TestUserService_Register(t *testing.T) {
 	ctx := context.Background()
 	req := &v1.RegisterRequest{
 		Password: "password",
-		Email:    "test@example.com",
+		Account:  "jiaking",
 	}
 
-	mockUserRepo.EXPECT().GetByEmail(ctx, req.Email).Return(nil, nil)
+	mockUserRepo.EXPECT().GetByAccount(ctx, req.Account).Return(nil, nil)
 	mockTm.EXPECT().Transaction(ctx, gomock.Any()).Return(nil)
 
 	err := userService.Register(ctx, req)
@@ -85,10 +85,10 @@ func TestUserService_Register_UsernameExists(t *testing.T) {
 	ctx := context.Background()
 	req := &v1.RegisterRequest{
 		Password: "password",
-		Email:    "test@example.com",
+		Account:  "test@example.com",
 	}
 
-	mockUserRepo.EXPECT().GetByEmail(ctx, req.Email).Return(&model.User{}, nil)
+	mockUserRepo.EXPECT().GetByAccount(ctx, req.Account).Return(&model.User{}, nil)
 
 	err := userService.Register(ctx, req)
 
@@ -114,8 +114,8 @@ func TestUserService_Login(t *testing.T) {
 		t.Error("failed to hash password")
 	}
 
-	mockUserRepo.EXPECT().GetByEmail(ctx, req.Email).Return(&model.User{
-		Password: string(hashedPassword),
+	mockUserRepo.EXPECT().GetByAccount(ctx, req.Email).Return(&model.User{
+		UserAccount: string(hashedPassword),
 	}, nil)
 
 	token, err := userService.Login(ctx, req)
@@ -139,7 +139,7 @@ func TestUserService_Login_UserNotFound(t *testing.T) {
 		Password: "password",
 	}
 
-	mockUserRepo.EXPECT().GetByEmail(ctx, req.Email).Return(nil, errors.New("user not found"))
+	mockUserRepo.EXPECT().GetByAccount(ctx, req.Email).Return(nil, errors.New("user not found"))
 
 	_, err := userService.Login(ctx, req)
 
@@ -159,8 +159,7 @@ func TestUserService_GetProfile(t *testing.T) {
 	userId := "123"
 
 	mockUserRepo.EXPECT().GetByID(ctx, userId).Return(&model.User{
-		UserId: userId,
-		Email:  "test@example.com",
+		UserAccount: "test@example.com",
 	}, nil)
 
 	user, err := userService.GetProfile(ctx, userId)
@@ -186,8 +185,7 @@ func TestUserService_UpdateProfile(t *testing.T) {
 	}
 
 	mockUserRepo.EXPECT().GetByID(ctx, userId).Return(&model.User{
-		UserId: userId,
-		Email:  "old@example.com",
+		UserAccount: "old@example.com",
 	}, nil)
 	mockUserRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
 

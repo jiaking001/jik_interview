@@ -12,7 +12,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
 	GetByID(ctx context.Context, id string) (*model.User, error)
-	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	GetByAccount(ctx context.Context, email string) (*model.User, error)
 }
 
 func NewUserRepository(
@@ -52,9 +52,9 @@ func (r *userRepository) GetByID(ctx context.Context, userId string) (*model.Use
 	return &user, nil
 }
 
-func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+func (r *userRepository) GetByAccount(ctx context.Context, account string) (*model.User, error) {
 	var user model.User
-	if err := r.DB(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+	if err := r.DB(ctx).Where("user_account = ?", account).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

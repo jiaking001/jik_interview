@@ -1,13 +1,14 @@
 package v1
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email" example:"1234@gmail.com"`
-	Password string `json:"password" binding:"required" example:"123456"`
+	UserAccount   string `json:"userAccount" binding:"required" example:"1234456"`
+	UserPassword  string `json:"userPassword" binding:"required" example:"123456"`
+	CheckPassword string `json:"checkPassword" binding:"required" example:"123456"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email" example:"1234@gmail.com"`
-	Password string `json:"password" binding:"required" example:"123456"`
+	UserAccount  string `json:"userAccount" binding:"required" example:"123456"`
+	UserPassword string `json:"userPassword" binding:"required" example:"123456"`
 }
 type LoginResponseData struct {
 	AccessToken string `json:"accessToken"`

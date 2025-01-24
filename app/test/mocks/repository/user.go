@@ -5,10 +5,10 @@
 package mock_repository
 
 import (
+	model "app/internal/model"
 	context "context"
 	reflect "reflect"
 
-	model "app/internal/model"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -49,19 +49,19 @@ func (mr *MockUserRepositoryMockRecorder) Create(ctx, user interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepository)(nil).Create), ctx, user)
 }
 
-// GetByEmail mocks base method.
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+// GetByAccount mocks base method.
+func (m *MockUserRepository) GetByAccount(ctx context.Context, email string) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
+	ret := m.ctrl.Call(m, "GetByAccount", ctx, email)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByEmail indicates an expected call of GetByEmail.
-func (mr *MockUserRepositoryMockRecorder) GetByEmail(ctx, email interface{}) *gomock.Call {
+// GetByAccount indicates an expected call of GetByAccount.
+func (mr *MockUserRepositoryMockRecorder) GetByAccount(ctx, email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockUserRepository)(nil).GetByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByAccount", reflect.TypeOf((*MockUserRepository)(nil).GetByAccount), ctx, email)
 }
 
 // GetByID mocks base method.

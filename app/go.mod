@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/duke-git/lancet/v2 v2.3.0
 	github.com/gavv/httpexpect/v2 v2.16.0
 	github.com/gin-gonic/gin v1.9.1

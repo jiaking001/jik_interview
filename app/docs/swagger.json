@@ -36,7 +36,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.LoginRequest"
+                            "$ref": "#/definitions/app_api_v1.LoginRequest"
                         }
                     }
                 ],
@@ -44,7 +44,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.LoginResponse"
+                            "$ref": "#/definitions/app_api_v1.LoginResponse"
                         }
                     }
                 }
@@ -70,7 +70,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.RegisterRequest"
+                            "$ref": "#/definitions/app_api_v1.RegisterRequest"
                         }
                     }
                 ],
@@ -78,7 +78,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.Response"
+                            "$ref": "#/definitions/app_api_v1.Response"
                         }
                     }
                 }
@@ -105,7 +105,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.GetProfileResponse"
+                            "$ref": "#/definitions/app_api_v1.GetProfileResponse"
                         }
                     }
                 }
@@ -133,7 +133,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.UpdateProfileRequest"
+                            "$ref": "#/definitions/app_api_v1.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -141,7 +141,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.Response"
+                            "$ref": "#/definitions/app_api_v1.Response"
                         }
                     }
                 }
@@ -149,21 +149,21 @@
         }
     },
     "definitions": {
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.GetProfileResponse": {
+        "app_api_v1.GetProfileResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.GetProfileResponseData"
+                    "$ref": "#/definitions/app_api_v1.GetProfileResponseData"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.GetProfileResponseData": {
+        "app_api_v1.GetProfileResponseData": {
             "type": "object",
             "properties": {
                 "nickname": {
@@ -175,7 +175,7 @@
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.LoginRequest": {
+        "app_api_v1.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -192,21 +192,21 @@
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.LoginResponse": {
+        "app_api_v1.LoginResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/github_com_go-nunu_nunu-layout-advanced_api_v1.LoginResponseData"
+                    "$ref": "#/definitions/app_api_v1.LoginResponseData"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.LoginResponseData": {
+        "app_api_v1.LoginResponseData": {
             "type": "object",
             "properties": {
                 "accessToken": {
@@ -214,16 +214,16 @@
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.RegisterRequest": {
+        "app_api_v1.RegisterRequest": {
             "type": "object",
             "required": [
-                "email",
+                "account",
                 "password"
             ],
             "properties": {
-                "email": {
+                "account": {
                     "type": "string",
-                    "example": "1234@gmail.com"
+                    "example": "1234456"
                 },
                 "password": {
                     "type": "string",
@@ -231,7 +231,7 @@
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.Response": {
+        "app_api_v1.Response": {
             "type": "object",
             "properties": {
                 "code": {
@@ -243,7 +243,7 @@
                 }
             }
         },
-        "github_com_go-nunu_nunu-layout-advanced_api_v1.UpdateProfileRequest": {
+        "app_api_v1.UpdateProfileRequest": {
             "type": "object",
             "required": [
                 "email"
