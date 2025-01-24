@@ -10,7 +10,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_ROOT_HOST=%
-      - MYSQL_DATABASE=user
+      - MYSQL_DATABASE=jik_interview
     # volumes:
     #   - ./data/mysql/user:/var/lib/mysql
     #   - ./conf/mysql/conf.d:/etc/mysql/conf.d

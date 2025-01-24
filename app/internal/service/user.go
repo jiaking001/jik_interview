@@ -2,11 +2,8 @@ package service
 
 import (
 	v1 "app/api/v1"
-	"app/internal/model"
 	"app/internal/repository"
 	"context"
-	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 type UserService interface {
@@ -33,82 +30,83 @@ type userService struct {
 
 func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) error {
 	// check username
-	user, err := s.userRepo.GetByEmail(ctx, req.Email)
-	if err != nil {
-		return v1.ErrInternalServerError
-	}
-	if err == nil && user != nil {
-		return v1.ErrEmailAlreadyUse
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	// Generate user ID
-	userId, err := s.sid.GenString()
-	if err != nil {
-		return err
-	}
-	user = &model.User{
-		UserId:   userId,
-		Email:    req.Email,
-		Password: string(hashedPassword),
-	}
-	// Transaction demo
-	err = s.tm.Transaction(ctx, func(ctx context.Context) error {
-		// Create a user
-		if err = s.userRepo.Create(ctx, user); err != nil {
-			return err
-		}
-		// TODO: other repo
-		return nil
-	})
-	return err
+	//user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	//if err != nil {
+	//	return v1.ErrInternalServerError
+	//}
+	//if err == nil && user != nil {
+	//	return v1.ErrEmailAlreadyUse
+	//}
+	//
+	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	//if err != nil {
+	//	return err
+	//}
+	//// Generate user ID
+	//userId, err := s.sid.GenString()
+	//if err != nil {
+	//	return err
+	//}
+	//user = &model.User{
+	//	UserId:   userId,
+	//	Email:    req.Email,
+	//	Password: string(hashedPassword),
+	//}
+	//// Transaction demo
+	//err = s.tm.Transaction(ctx, func(ctx context.Context) error {
+	//	// Create a user
+	//	if err = s.userRepo.Create(ctx, user); err != nil {
+	//		return err
+	//	}
+	//	// TODO: other repo
+	//	return nil
+	//})
+	return nil
 }
 
 func (s *userService) Login(ctx context.Context, req *v1.LoginRequest) (string, error) {
-	user, err := s.userRepo.GetByEmail(ctx, req.Email)
-	if err != nil || user == nil {
-		return "", v1.ErrUnauthorized
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
-	if err != nil {
-		return "", err
-	}
-	token, err := s.jwt.GenToken(user.UserId, time.Now().Add(time.Hour*24*90))
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
+	//user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	//if err != nil || user == nil {
+	//	return "", v1.ErrUnauthorized
+	//}
+	//
+	//err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	//if err != nil {
+	//	return "", err
+	//}
+	//token, err := s.jwt.GenToken(user.UserId, time.Now().Add(time.Hour*24*90))
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//return token, nil
+	return "", nil
 }
 
 func (s *userService) GetProfile(ctx context.Context, userId string) (*v1.GetProfileResponseData, error) {
-	user, err := s.userRepo.GetByID(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
+	//user, err := s.userRepo.GetByID(ctx, userId)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &v1.GetProfileResponseData{
-		UserId:   user.UserId,
-		Nickname: user.Nickname,
+		//UserId:   user.UserId,
+		//Nickname: user.Nickname,
 	}, nil
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, userId string, req *v1.UpdateProfileRequest) error {
-	user, err := s.userRepo.GetByID(ctx, userId)
-	if err != nil {
-		return err
-	}
-
-	user.Email = req.Email
-	user.Nickname = req.Nickname
-
-	if err = s.userRepo.Update(ctx, user); err != nil {
-		return err
-	}
+	//user, err := s.userRepo.GetByID(ctx, userId)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//user.Email = req.Email
+	//user.Nickname = req.Nickname
+	//
+	//if err = s.userRepo.Update(ctx, user); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
