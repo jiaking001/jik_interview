@@ -1,19 +1,16 @@
 "use client";
-import {
-    GithubFilled,
-    LogoutOutlined,
-    SearchOutlined,
-} from '@ant-design/icons';
-import type {ProSettings} from '@ant-design/pro-components';
+import {GithubFilled, LogoutOutlined, SearchOutlined,} from '@ant-design/icons';
 import {ProLayout,} from '@ant-design/pro-components';
 import {Dropdown, Input,} from 'antd';
-import React, {useState} from 'react';
+import React from 'react';
 import Image from 'next/image';
 import {usePathname} from "next/navigation";
 import Link from "next/link";
 import GlobalFooter from "@/components/GlobalFooter";
 import "./index.css";
 import menus from "../../../config/menu";
+import {RootState} from "@/stores";
+import {useSelector} from "react-redux";
 
 /**
  * 搜索框
@@ -53,8 +50,17 @@ interface Props {
     children: React.ReactNode;
 }
 
+/**
+ * 全局通用布局
+ * @param children
+ * @constructor
+ */
+
 export default function BasicLayout({children}: Props) {
     const pathname = usePathname();
+
+    const loginUser = useSelector((state: RootState) => state.loginUser);
+
     return (
         <div
             id="basic-layout"
@@ -78,9 +84,9 @@ export default function BasicLayout({children}: Props) {
                     pathname,
                 }}
                 avatarProps={{
-                    src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
+                    src: loginUser.userAvatar || "/assets/logo.png",
                     size: 'small',
-                    title: "jiaking",
+                    title: loginUser.userName || "jiaking",
                     render: (props, dom) => {
                         return (
                             <Dropdown
