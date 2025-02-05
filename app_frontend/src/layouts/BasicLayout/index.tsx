@@ -8,9 +8,10 @@ import {usePathname} from "next/navigation";
 import Link from "next/link";
 import GlobalFooter from "@/components/GlobalFooter";
 import "./index.css";
-import menus from "../../../config/menu";
+import {menus} from "../../../config/menus";
 import {RootState} from "@/stores";
 import {useSelector} from "react-redux";
+import getAccessibleMenus from "@/access/menuAccess";
 
 /**
  * 搜索框
@@ -129,7 +130,7 @@ export default function BasicLayout({children}: Props) {
                 onMenuHeaderClick={(e) => console.log(e)}
                 // 定义菜单
                 menuDataRender={() => {
-                    return menus;
+                    return getAccessibleMenus(loginUser, menus);
                 }}
                 // 定义了菜单项的渲染方式
                 menuItemRender={(item, dom) => (
