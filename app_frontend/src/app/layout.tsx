@@ -7,6 +7,7 @@ import store, {AppDispatch} from "@/stores";
 import {Provider, useDispatch} from "react-redux";
 import {getLoginUserUsingGet} from "@/api/userController";
 import AccessLayout from "@/access/AccessLayout";
+import {setLoginUser} from "@/stores/loginUser";
 
 /**
  * 全局初始化逻辑
@@ -24,6 +25,8 @@ const InitLayout: React.FC<
         const res = await getLoginUserUsingGet();
         if (res.data) {
             // 更新全局用户状态
+            // 保存用户登录态
+            dispatch(setLoginUser(res.data));
         }
     }, []);
 

@@ -13,7 +13,16 @@ export default function GlobalFooter() {
             className="global-footer"
         >
             <div>© {currentYear} 面试刷题平台</div>
-            <div>by JiaKing</div>
+            <div>
+                <a href="https://github.com/jiaking001" target="_blank">
+                    by JiaKing
+                </a>
+            </div>
+            <div>
+                <a href="https://github.com/jiaking001/jik_interview" target="_blank">
+                    项目地址
+                </a>
+            </div>
         </div>
     );
 };
