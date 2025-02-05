@@ -7,6 +7,8 @@ import (
 	"app/pkg/jwt"
 	"app/pkg/log"
 	"app/pkg/server/http"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
@@ -38,7 +40,10 @@ func NewHTTPServer(
 		ginSwagger.PersistAuthorization(true),
 	))
 
+	// 创建基于 Cookie 的存储引擎，"secret" 是用于加密的密钥
+	store := cookie.NewStore([]byte("jik"))
 	s.Use(
+		sessions.Sessions("user", store),
 		middleware.CORSMiddleware(),
 		middleware.ResponseLogMiddleware(logger),
 		middleware.RequestLogMiddleware(logger),
@@ -50,20 +55,23 @@ func NewHTTPServer(
 		// No route group has permission
 		noAuthRouter := v1.Group("/")
 		{
-			noAuthRouter.POST("/user/register", userHandler.Register)
-			noAuthRouter.POST("/user/login", userHandler.Login)
+			user := noAuthRouter.Group("/user")
+			user.POST("/register", userHandler.Register)
+			user.POST("/login", userHandler.Login)
+			user.GET("/get/login", userHandler.GetLoginUser)
+			user.POST("/logout", userHandler.Logout)
 		}
 		// Non-strict permission routing group
-		noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))
-		{
-			noStrictAuthRouter.GET("/user", userHandler.GetProfile)
-		}
+		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))
+		//{
+		//	//noStrictAuthRouter.GET("/user", userHandler.GetProfile)
+		//}
 
 		// Strict permission routing group
-		strictAuthRouter := v1.Group("/").Use(middleware.StrictAuth(jwt, logger))
-		{
-			strictAuthRouter.PUT("/user", userHandler.UpdateProfile)
-		}
+		//strictAuthRouter := v1.Group("/").Use(middleware.StrictAuth(jwt, logger))
+		//{
+		//	//strictAuthRouter.PUT("/user", userHandler.UpdateProfile)
+		//}
 	}
 
 	return s

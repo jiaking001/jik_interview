@@ -5,6 +5,7 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"context"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
@@ -12,9 +13,8 @@ import (
 
 type UserService interface {
 	Register(ctx context.Context, req *v1.RegisterRequest) error
-	Login(ctx context.Context, req *v1.LoginRequest) (string, error)
-	GetProfile(ctx context.Context, userId string) (*v1.GetProfileResponseData, error)
-	UpdateProfile(ctx context.Context, userId string, req *v1.UpdateProfileRequest) error
+	Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error)
+	GetLoginUser(ctx *gin.Context) error
 }
 
 func NewUserService(
@@ -32,6 +32,13 @@ type userService struct {
 	*Service
 }
 
+// GetLoginUser 获取当前登录用户
+func (s *userService) GetLoginUser(ctx *gin.Context) error {
+	// 判断是否已登录
+	return nil
+}
+
+// Register 用户注册
 func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) error {
 	// check username
 	user, err := s.userRepo.GetByAccount(ctx, req.UserAccount)
@@ -41,10 +48,14 @@ func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) err
 	if user != nil {
 		return v1.ErrAccountAlreadyUse
 	}
+	if len(req.UserAccount) < 3 || len(req.UserAccount) > 20 {
+		return v1.ErrIllegalAccount
+	}
+	if len(req.UserPassword) < 6 || len(req.UserPassword) > 60 {
+		return v1.ErrIllegalPassword
+	}
 
-	userPassword := req.UserPassword
-	checkPassword := req.CheckPassword
-	if userPassword != checkPassword {
+	if req.UserPassword != req.CheckPassword {
 		return v1.ErrInconsistentPasswords
 	}
 
@@ -68,48 +79,20 @@ func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) err
 	return err
 }
 
-func (s *userService) Login(ctx context.Context, req *v1.LoginRequest) (string, error) {
+// Login 用户登录
+func (s *userService) Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error) {
 	user, err := s.userRepo.GetByAccount(ctx, req.UserAccount)
 	if err != nil || user == nil {
-		return "", v1.ErrUnauthorized
+		return "", nil, v1.ErrPassword
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.UserPassword), []byte(req.UserPassword))
 	if err != nil {
-		return "", err
+		return "", nil, v1.ErrPassword
 	}
 	token, err := s.jwt.GenToken(strconv.FormatUint(user.ID, 10), time.Now().Add(time.Hour*24*90))
 	if err != nil {
-		return "", err
+		return "", nil, v1.ErrInternalServerError
 	}
-
-	return token, nil
-}
-
-func (s *userService) GetProfile(ctx context.Context, userId string) (*v1.GetProfileResponseData, error) {
-	//user, err := s.userRepo.GetByID(ctx, userId)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	return &v1.GetProfileResponseData{
-		//UserId:   user.UserId,
-		//Nickname: user.Nickname,
-	}, nil
-}
-
-func (s *userService) UpdateProfile(ctx context.Context, userId string, req *v1.UpdateProfileRequest) error {
-	//user, err := s.userRepo.GetByID(ctx, userId)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//user.Email = req.Email
-	//user.Nickname = req.Nickname
-	//
-	//if err = s.userRepo.Update(ctx, user); err != nil {
-	//	return err
-	//}
-
-	return nil
+	return token, user, nil
 }
