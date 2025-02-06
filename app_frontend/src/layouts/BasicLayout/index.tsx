@@ -104,11 +104,11 @@ export default function BasicLayout({children}: Props) {
                     pathname,
                 }}
                 avatarProps={{
-                    src: loginUser.UserAvatar || "/assets/logo.png",
+                    src: loginUser.userAvatar || "/assets/logo.png",
                     size: 'small',
-                    title: loginUser.UserName || "jiaking",
+                    title: loginUser.userName || "jiaking",
                     render: (props, dom) => {
-                        if (!loginUser.Id) {
+                        if (!loginUser.id) {
                             return (
                                 <div
                                     onClick={() => {
