@@ -14,4 +14,6 @@ var (
 	ErrIllegalPassword       = newError(40000, "密码不规范")
 	ErrIllegalAccount        = newError(40000, "账号不规范")
 	ErrPassword              = newError(40000, "账号或密码错误")
+	ParamsError              = newError(40000, "请求参数错误")
+	NotLoginError            = newError(40100, "未登录")
 )

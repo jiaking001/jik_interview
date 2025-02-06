@@ -17,31 +17,97 @@ type LoginRequest struct {
 	UserPassword string `json:"userPassword" binding:"required" example:"123456"`
 }
 type LoginResponseData struct {
-	Id          uint64
-	UserName    *string
-	UserAvatar  *string
-	UserProfile *string
-	UserRole    string
-	CreateTime  time.Time
-	UpdateTime  time.Time
-}
-type LoginResponse struct {
-	Response
-	Data LoginResponseData
+	Id          uint64    `json:"id"`
+	UserName    *string   `json:"userName"`
+	UserAvatar  *string   `json:"userAvatar"`
+	UserProfile *string   `json:"userProfile"`
+	UserRole    string    `json:"userRole"`
+	CreateTime  time.Time `json:"createTime"`
+	UpdateTime  time.Time `json:"updateTime"`
 }
 
 // 获取全局用户状态
 
 type GetLoginUserResponseData struct {
-	Id          uint64
-	UserName    *string
-	UserAvatar  *string
-	UserProfile *string
-	UserRole    string
-	CreateTime  time.Time
-	UpdateTime  time.Time
+	Id          uint64    `json:"id"`
+	UserName    *string   `json:"userName"`
+	UserAvatar  *string   `json:"userAvatar"`
+	UserProfile *string   `json:"userProfile"`
+	UserRole    string    `json:"userRole"`
+	CreateTime  time.Time `json:"createTime"`
+	UpdateTime  time.Time `json:"updateTime"`
 }
-type GetLoginUserResponse struct {
-	Response
-	Data GetLoginUserResponseData
+
+// 分页查询
+
+type User struct {
+	CreateTime   *time.Time `json:"createTime,omitempty"`
+	EditTime     *time.Time `json:"editTime,omitempty"`
+	ID           *string    `json:"id,omitempty"`
+	IsDelete     *int8      `json:"isDelete,omitempty"`
+	MpOpenID     *string    `json:"mpOpenId,omitempty"`
+	UnionID      *string    `json:"unionId,omitempty"`
+	UpdateTime   *time.Time `json:"updateTime,omitempty"`
+	UserAccount  *string    `json:"userAccount,omitempty"`
+	UserAvatar   *string    `json:"userAvatar,omitempty"`
+	UserName     *string    `json:"userName,omitempty"`
+	UserPassword *string    `json:"userPassword,omitempty"`
+	UserProfile  *string    `json:"userProfile,omitempty"`
+	UserRole     *string    `json:"userRole,omitempty"`
+}
+type UserQueryRequest struct {
+	Current     *int    `json:"current"`
+	ID          *string `json:"id"`
+	MpOpenID    *string `json:"mpOpenId"`
+	PageSize    *int    `json:"pageSize"`
+	SortField   *string `json:"sortField"`
+	SortOrder   *string `json:"sortOrder"`
+	UnionID     *string `json:"unionId"`
+	UserName    *string `json:"userName"`
+	UserAccount *string `json:"userAccount"`
+	UserProfile *string `json:"userProfile"`
+	UserRole    *string `json:"userRole"`
+}
+type PageResult[T any] struct {
+	Records []T  `json:"records"` // 当前页的记录列表
+	Total   *int `json:"total"`   // 总记录数
+	Size    *int `json:"size"`    // 每页大小
+	Current *int `json:"current"` // 当前页码
+	Pages   *int `json:"pages"`   // 总页数
+}
+type UserQueryResponseData[T any] struct {
+	Records []T  `json:"records"` // 当前页的记录列表
+	Total   *int `json:"total"`   // 总记录数
+	Size    *int `json:"size"`    // 每页大小
+	Current *int `json:"current"` // 当前页码
+	Pages   *int `json:"pages"`   // 总页数
+}
+
+// 添加用户
+
+type AddUserRequest struct {
+	UserAccount *string `json:"userAccount"`
+	UserAvatar  *string `json:"userAvatar"`
+	UserName    *string `json:"userName"`
+	UserProfile *string `json:"userProfile"`
+	UserRole    *string `json:"userRole"`
+}
+type AddUserResponseDate struct {
+	Id uint64 `json:"id"`
+}
+
+// 删除用户
+
+type DeleteUserRequest struct {
+	Id string `json:"id"`
+}
+
+// 更新用户
+
+type UpdateUserRequest struct {
+	Id          string  `json:"id"`
+	UserAccount *string `json:"userAccount"`
+	UserAvatar  *string `json:"userAvatar"`
+	UserName    *string `json:"userName"`
+	UserRole    *string `json:"userRole"`
 }

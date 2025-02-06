@@ -128,7 +128,8 @@ func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	userInterface := session.Get("user_login")
 	if userInterface == nil {
-		v1.HandleSuccess(ctx, nil)
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
 	}
 	user := userInterface.(*model.User)
 	if user == nil {
@@ -144,4 +145,72 @@ func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 		CreateTime:  user.CreateTime,
 		UpdateTime:  user.UpdateTime,
 	})
+}
+
+func (h *UserHandler) ListPage(ctx *gin.Context) {
+	// TODO 排序，查找特定值未实现
+	var req v1.UserQueryRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	page, err := h.userService.ListUserByPage(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, v1.UserQueryResponseData[v1.User]{
+		Records: page.Records,
+		Size:    page.Size,
+		Total:   page.Total,
+		Current: page.Current,
+		Pages:   page.Pages,
+	})
+}
+
+func (h *UserHandler) AddUser(ctx *gin.Context) {
+	var req v1.AddUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	id, err := h.userService.AddUser(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, id)
+}
+
+func (h *UserHandler) DeleteUser(ctx *gin.Context) {
+	var req v1.DeleteUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.userService.DeleteUser(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, ok)
+}
+
+func (h *UserHandler) UpdateUser(ctx *gin.Context) {
+	var req v1.UpdateUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.userService.UpdateUser(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, ok)
 }

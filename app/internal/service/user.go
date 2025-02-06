@@ -15,6 +15,10 @@ type UserService interface {
 	Register(ctx context.Context, req *v1.RegisterRequest) error
 	Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error)
 	GetLoginUser(ctx *gin.Context) error
+	ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error)
+	AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64, error)
+	DeleteUser(ctx *gin.Context, req *v1.DeleteUserRequest) (bool, error)
+	UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (bool, error)
 }
 
 func NewUserService(
@@ -30,6 +34,135 @@ func NewUserService(
 type userService struct {
 	userRepo repository.UserRepository
 	*Service
+}
+
+func (s *userService) UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (bool, error) {
+	if req == nil || req.Id == "" {
+		return false, v1.ParamsError
+	}
+
+	id, err := strconv.ParseUint(req.Id, 10, 64)
+	if err != nil {
+		return false, v1.ParamsError
+	}
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	if req.UserAccount != nil && *req.UserAccount != "" {
+		user.UserAccount = *req.UserAccount
+	}
+	if req.UserAvatar != nil && *req.UserAvatar != "" {
+		user.UserAvatar = req.UserAvatar
+	}
+	if req.UserName != nil && *req.UserName != "" {
+		user.UserName = req.UserName
+	}
+	if req.UserRole != nil && *req.UserRole != "" {
+		user.UserRole = *req.UserRole
+	}
+
+	err = s.userRepo.Update(ctx, user)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (s *userService) DeleteUser(ctx *gin.Context, req *v1.DeleteUserRequest) (bool, error) {
+	if req.Id <= "0" {
+		return false, v1.ParamsError
+	}
+	id, err := strconv.ParseUint(req.Id, 10, 64)
+	if err != nil {
+		return false, v1.ParamsError
+	}
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	err = s.userRepo.DeleteById(ctx, user, id)
+	if err != nil {
+		return false, err
+	}
+	user.IsDelete = 1
+	err = s.userRepo.Update(ctx, user)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64, error) {
+	if *req.UserAccount == "" {
+		return 0, v1.ErrIllegalAccount
+	}
+	user, err := s.userRepo.GetByAccount(ctx, *req.UserAccount)
+	if err != nil {
+		return 0, v1.ErrInternalServerError
+	}
+	if user != nil {
+		return 0, v1.ErrAccountAlreadyUse
+	}
+	if len(*req.UserAccount) < 3 || len(*req.UserAccount) > 20 {
+		return 0, v1.ErrIllegalAccount
+	}
+
+	user = &model.User{
+		UserAccount:  *req.UserAccount,
+		UserAvatar:   req.UserAvatar,
+		UserName:     req.UserName,
+		UserProfile:  req.UserProfile,
+		UserRole:     *req.UserRole,
+		UserPassword: "123456", // 默认密码
+	}
+	err = s.userRepo.Create(ctx, user)
+	if err != nil {
+		return 0, err
+	}
+	var u *model.User
+	u, err = s.userRepo.GetByAccount(ctx, *req.UserAccount)
+	return u.ID, nil
+}
+
+func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error) {
+	current := req.Current
+	size := req.PageSize
+	users, err := s.userRepo.GetUser(ctx)
+	var user []v1.User
+	for _, v := range users {
+		var id string
+		id = strconv.Itoa(int(v.ID))
+		u := v1.User{
+			ID:           &id,
+			UserAccount:  &v.UserAccount,
+			UserPassword: &v.UserPassword,
+			UnionID:      v.UnionId,
+			MpOpenID:     v.MpOpenId,
+			UserName:     v.UserName,
+			UserAvatar:   v.UserAvatar,
+			UserProfile:  v.UserProfile,
+			UserRole:     &v.UserRole,
+			EditTime:     &v.EditTime,
+			CreateTime:   &v.CreateTime,
+			UpdateTime:   &v.UpdateTime,
+			IsDelete:     &v.IsDelete,
+		}
+		user = append(user, u)
+	}
+	if err != nil {
+		return v1.PageResult[v1.User]{}, err
+	}
+	total := 10
+	pages := 10
+	return v1.PageResult[v1.User]{
+		Records: user,
+		Total:   &total,
+		Size:    size,
+		Current: current,
+		Pages:   &pages,
+	}, nil
 }
 
 // GetLoginUser 获取当前登录用户

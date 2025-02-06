@@ -55,11 +55,16 @@ func NewHTTPServer(
 		// No route group has permission
 		noAuthRouter := v1.Group("/")
 		{
+			// 用户模块
 			user := noAuthRouter.Group("/user")
 			user.POST("/register", userHandler.Register)
 			user.POST("/login", userHandler.Login)
 			user.GET("/get/login", userHandler.GetLoginUser)
 			user.POST("/logout", userHandler.Logout)
+			user.POST("/list/page", userHandler.ListPage)
+			user.POST("/add", userHandler.AddUser)
+			user.POST("/delete", userHandler.DeleteUser)
+			user.POST("/update", userHandler.UpdateUser)
 		}
 		// Non-strict permission routing group
 		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))

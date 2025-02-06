@@ -11,8 +11,10 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
-	GetByID(ctx context.Context, id string) (*model.User, error)
-	GetByAccount(ctx context.Context, email string) (*model.User, error)
+	GetByID(ctx context.Context, id uint64) (*model.User, error)
+	GetByAccount(ctx context.Context, account string) (*model.User, error)
+	GetUser(ctx context.Context) ([]*model.User, error)
+	DeleteById(ctx context.Context, user *model.User, id uint64) error
 }
 
 func NewUserRepository(
@@ -25,6 +27,21 @@ func NewUserRepository(
 
 type userRepository struct {
 	*Repository
+}
+
+func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id uint64) error {
+	if err := r.DB(ctx).Where("id = ?", id).Delete(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) GetUser(ctx context.Context) ([]*model.User, error) {
+	var users []*model.User
+	if err := r.DB(ctx).Find(&users).Error; err != nil {
+		return nil, v1.ErrNotFound
+	}
+	return users, nil
 }
 
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
@@ -41,9 +58,9 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *userRepository) GetByID(ctx context.Context, userId string) (*model.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, userId uint64) (*model.User, error) {
 	var user model.User
-	if err := r.DB(ctx).Where("user_id = ?", userId).First(&user).Error; err != nil {
+	if err := r.DB(ctx).Where("id = ?", userId).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, v1.ErrNotFound
 		}
