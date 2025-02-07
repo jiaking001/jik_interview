@@ -130,6 +130,9 @@ func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest)
 	current := req.Current
 	size := req.PageSize
 	users, err := s.userRepo.GetUser(ctx)
+	if err != nil {
+		return v1.PageResult[v1.User]{}, err
+	}
 	var user []v1.User
 	for _, v := range users {
 		var id string
@@ -150,9 +153,6 @@ func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest)
 			IsDelete:     &v.IsDelete,
 		}
 		user = append(user, u)
-	}
-	if err != nil {
-		return v1.PageResult[v1.User]{}, err
 	}
 	total := 10
 	pages := 10

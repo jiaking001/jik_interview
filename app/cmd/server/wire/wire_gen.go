@@ -34,7 +34,13 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	userRepository := repository.NewUserRepository(repositoryRepository)
 	userService := service.NewUserService(serviceService, userRepository)
 	userHandler := handler.NewUserHandler(handlerHandler, userService)
-	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler)
+	questionRepository := repository.NewQuestionRepository(repositoryRepository)
+	questionService := service.NewQuestionService(serviceService, questionRepository)
+	questionHandler := handler.NewQuestionHandler(handlerHandler, questionService)
+	questionBankRepository := repository.NewQuestionBankRepository(repositoryRepository)
+	questionBankService := service.NewQuestionBankService(serviceService, questionBankRepository)
+	questionBankHandler := handler.NewQuestionBankHandler(handlerHandler, questionBankService)
+	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler, questionHandler, questionBankHandler)
 	jobJob := job.NewJob(transaction, logger, sidSid)
 	userJob := job.NewUserJob(jobJob, userRepository)
 	jobServer := server.NewJobServer(logger, userJob)
@@ -45,11 +51,11 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 
 // wire.go:
 
-var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository)
+var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository)
 
-var serviceSet = wire.NewSet(service.NewService, service.NewUserService)
+var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewQuestionBankService, service.NewQuestionService)
 
-var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler)
+var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewQuestionBankHandler, handler.NewQuestionHandler)
 
 var jobSet = wire.NewSet(job.NewJob, job.NewUserJob)
 

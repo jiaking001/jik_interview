@@ -1,13 +1,14 @@
 package service
 
 import (
-	"app/internal/model"
+	v1 "app/api/v1"
 	"app/internal/repository"
 	"context"
+	"strconv"
 )
 
 type QuestionBankService interface {
-	GetQuestionBank(ctx context.Context, id int64) (*model.QuestionBank, error)
+	ListBankByPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankQueryResponseData[v1.QuestionBank], error)
 }
 
 func NewQuestionBankService(
@@ -25,6 +26,38 @@ type questionBankService struct {
 	questionBankRepository repository.QuestionBankRepository
 }
 
-func (s *questionBankService) GetQuestionBank(ctx context.Context, id int64) (*model.QuestionBank, error) {
-	return s.questionBankRepository.GetQuestionBank(ctx, id)
+func (s *questionBankService) ListBankByPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankQueryResponseData[v1.QuestionBank], error) {
+	current := req.Current
+	size := req.PageSize
+	questionBanks, err := s.questionBankRepository.GetQuestionBank(ctx)
+	if err != nil {
+		return v1.QuestionBankQueryResponseData[v1.QuestionBank]{}, err
+	}
+	var questionBankList []v1.QuestionBank
+	for _, questionBank := range questionBanks {
+		var id, userId string
+		id = strconv.Itoa(int(questionBank.ID))
+		userId = strconv.Itoa(int(questionBank.UserID))
+		q := v1.QuestionBank{
+			CreateTime:  &questionBank.CreateTime,
+			Description: questionBank.Description,
+			EditTime:    &questionBank.EditTime,
+			ID:          &id,
+			IsDelete:    &questionBank.IsDelete,
+			Picture:     questionBank.Picture,
+			Title:       questionBank.Title,
+			UpdateTime:  &questionBank.UpdateTime,
+			UserID:      &userId,
+		}
+		questionBankList = append(questionBankList, q)
+	}
+	total := 10
+	pages := 10
+	return v1.QuestionBankQueryResponseData[v1.QuestionBank]{
+		Records: questionBankList,
+		Total:   &total,
+		Pages:   &pages,
+		Size:    size,
+		Current: current,
+	}, nil
 }

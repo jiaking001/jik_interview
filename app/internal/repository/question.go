@@ -1,12 +1,13 @@
 package repository
 
 import (
+	v1 "app/api/v1"
 	"app/internal/model"
 	"context"
 )
 
 type QuestionRepository interface {
-	GetQuestion(ctx context.Context, id int64) (*model.Question, error)
+	GetQuestion(ctx context.Context) ([]model.Question, error)
 }
 
 func NewQuestionRepository(
@@ -21,8 +22,10 @@ type questionRepository struct {
 	*Repository
 }
 
-func (r *questionRepository) GetQuestion(ctx context.Context, id int64) (*model.Question, error) {
-	var question model.Question
-
-	return &question, nil
+func (r *questionRepository) GetQuestion(ctx context.Context) ([]model.Question, error) {
+	var questions []model.Question
+	if err := r.DB(ctx).Find(&questions).Error; err != nil {
+		return nil, v1.ErrNotFound
+	}
+	return questions, nil
 }

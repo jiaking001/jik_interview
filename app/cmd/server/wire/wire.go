@@ -24,16 +24,22 @@ var repositorySet = wire.NewSet(
 	repository.NewRepository,
 	repository.NewTransaction,
 	repository.NewUserRepository,
+	repository.NewQuestionBankRepository,
+	repository.NewQuestionRepository,
 )
 
 var serviceSet = wire.NewSet(
 	service.NewService,
 	service.NewUserService,
+	service.NewQuestionBankService,
+	service.NewQuestionService,
 )
 
 var handlerSet = wire.NewSet(
 	handler.NewHandler,
 	handler.NewUserHandler,
+	handler.NewQuestionBankHandler,
+	handler.NewQuestionHandler,
 )
 
 var jobSet = wire.NewSet(

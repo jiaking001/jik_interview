@@ -20,8 +20,8 @@ func NewHTTPServer(
 	conf *viper.Viper,
 	jwt *jwt.JWT,
 	userHandler *handler.UserHandler,
-	// questionHandler *handler.QuestionHandler,
-	// questionBankHandler *handler.QuestionBankHandler,
+	questionHandler *handler.QuestionHandler,
+	questionBankHandler *handler.QuestionBankHandler,
 ) *http.Server {
 	gin.SetMode(gin.DebugMode)
 	s := http.NewServer(
@@ -65,6 +65,14 @@ func NewHTTPServer(
 			user.POST("/add", userHandler.AddUser)
 			user.POST("/delete", userHandler.DeleteUser)
 			user.POST("/update", userHandler.UpdateUser)
+
+			// 题库模块
+			questionBank := noAuthRouter.Group("/questionBank")
+			questionBank.POST("/list/page", questionBankHandler.ListPage)
+
+			// 题目模块
+			question := noAuthRouter.Group("/question")
+			question.POST("/list/page", questionHandler.ListPage)
 		}
 		// Non-strict permission routing group
 		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))
