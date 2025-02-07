@@ -36,3 +36,26 @@ type QuestionBankQueryResponseData[T any] struct {
 	Current *int `json:"current"` // 当前页码
 	Pages   *int `json:"pages"`   // 总页数
 }
+
+// 添加题库
+
+type AddQuestionBankRequest struct {
+	Description *string `json:"description,omitempty"` // 描述
+	Picture     *string `json:"picture,omitempty"`     // 图片链接
+	Title       *string `json:"title,omitempty"`       // 标题
+}
+
+// 删除题库
+
+type DeleteQuestionBankRequest struct {
+	Id string `json:"id"`
+}
+
+// 更新题库
+
+type UpdateQuestionBankRequest struct {
+	Description *string `json:"description,omitempty"` // 描述
+	ID          *string `json:"id,omitempty"`          // ID
+	Picture     *string `json:"picture,omitempty"`     // 图片链接
+	Title       *string `json:"title,omitempty"`       // 标题
+}

@@ -38,3 +38,28 @@ type QuestionQueryResponseData[T any] struct {
 	Current *int `json:"current"` // 当前页码
 	Pages   *int `json:"pages"`   // 总页数
 }
+
+// 添加题目
+
+type AddQuestionRequest struct {
+	Answer  *string  `json:"answer,omitempty"`  // 回答内容
+	Content *string  `json:"content,omitempty"` // 内容
+	Tags    []string `json:"tags,omitempty"`    // 标签列表
+	Title   *string  `json:"title,omitempty"`   // 标题
+}
+
+// 删除题目
+
+type DeleteQuestionRequest struct {
+	Id string `json:"id"`
+}
+
+// 更新题目
+
+type UpdateQuestionRequest struct {
+	Answer  *string  `json:"answer,omitempty"`  // 回答内容
+	Content *string  `json:"content,omitempty"` // 内容
+	ID      *string  `json:"id,omitempty"`      // ID
+	Tags    []string `json:"tags,omitempty"`    // 标签列表
+	Title   *string  `json:"title,omitempty"`   // 标题
+}

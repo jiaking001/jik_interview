@@ -92,9 +92,6 @@ type AddUserRequest struct {
 	UserProfile *string `json:"userProfile"`
 	UserRole    *string `json:"userRole"`
 }
-type AddUserResponseDate struct {
-	Id uint64 `json:"id"`
-}
 
 // 删除用户
 
@@ -110,4 +107,5 @@ type UpdateUserRequest struct {
 	UserAvatar  *string `json:"userAvatar"`
 	UserName    *string `json:"userName"`
 	UserRole    *string `json:"userRole"`
+	UserProfile *string `json:"userProfile"`
 }

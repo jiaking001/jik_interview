@@ -61,6 +61,9 @@ func (s *userService) UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (b
 	if req.UserRole != nil && *req.UserRole != "" {
 		user.UserRole = *req.UserRole
 	}
+	if req.UserProfile != nil && *req.UserProfile != "" {
+		user.UserProfile = req.UserProfile
+	}
 
 	err = s.userRepo.Update(ctx, user)
 	if err != nil {
@@ -109,13 +112,18 @@ func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64,
 		return 0, v1.ErrIllegalAccount
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+
 	user = &model.User{
 		UserAccount:  *req.UserAccount,
 		UserAvatar:   req.UserAvatar,
 		UserName:     req.UserName,
 		UserProfile:  req.UserProfile,
 		UserRole:     *req.UserRole,
-		UserPassword: "123456", // 默认密码
+		UserPassword: string(hashedPassword), // 默认密码
 	}
 	err = s.userRepo.Create(ctx, user)
 	if err != nil {
@@ -123,6 +131,9 @@ func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64,
 	}
 	var u *model.User
 	u, err = s.userRepo.GetByAccount(ctx, *req.UserAccount)
+	if err != nil {
+		return 0, err
+	}
 	return u.ID, nil
 }
 
@@ -154,8 +165,11 @@ func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest)
 		}
 		user = append(user, u)
 	}
-	total := 10
-	pages := 10
+	total, err := s.userRepo.GetCount(ctx)
+	if err != nil {
+		return v1.PageResult[v1.User]{}, err
+	}
+	pages := total / *size + 1
 	return v1.PageResult[v1.User]{
 		Records: user,
 		Total:   &total,

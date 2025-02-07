@@ -44,3 +44,48 @@ func (h *QuestionBankHandler) ListPage(ctx *gin.Context) {
 		Pages:   page.Pages,
 	})
 }
+
+func (h *QuestionBankHandler) AddQuestionBank(ctx *gin.Context) {
+	var req v1.AddQuestionBankRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	id, err := h.questionBankService.AddQuestionBank(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, id)
+}
+
+func (h *QuestionBankHandler) DeleteQuestionBank(ctx *gin.Context) {
+	var req v1.DeleteQuestionBankRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.questionBankService.DeleteUser(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, ok)
+}
+
+func (h *QuestionBankHandler) UpdateQuestionBank(ctx *gin.Context) {
+	var req v1.UpdateQuestionBankRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.questionBankService.UpdateQuestionBank(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, ok)
+}

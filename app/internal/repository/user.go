@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetByAccount(ctx context.Context, account string) (*model.User, error)
 	GetUser(ctx context.Context) ([]*model.User, error)
 	DeleteById(ctx context.Context, user *model.User, id uint64) error
+	GetCount(ctx context.Context) (int, error)
 }
 
 func NewUserRepository(
@@ -27,6 +28,15 @@ func NewUserRepository(
 
 type userRepository struct {
 	*Repository
+}
+
+func (r *userRepository) GetCount(ctx context.Context) (int, error) {
+	var total int64
+	var user model.User
+	if err := r.DB(ctx).Model(&user).Count(&total).Error; err != nil {
+		return 0, err
+	}
+	return int(total), nil
 }
 
 func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id uint64) error {

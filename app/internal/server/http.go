@@ -69,10 +69,16 @@ func NewHTTPServer(
 			// 题库模块
 			questionBank := noAuthRouter.Group("/questionBank")
 			questionBank.POST("/list/page", questionBankHandler.ListPage)
+			questionBank.POST("/add", questionBankHandler.AddQuestionBank)
+			questionBank.POST("/delete", questionBankHandler.DeleteQuestionBank)
+			questionBank.POST("/update", questionBankHandler.UpdateQuestionBank)
 
 			// 题目模块
 			question := noAuthRouter.Group("/question")
 			question.POST("/list/page", questionHandler.ListPage)
+			question.POST("/add", questionHandler.AddQuestion)
+			question.POST("/delete", questionHandler.DeleteQuestion)
+			question.POST("/update", questionHandler.UpdateQuestion)
 		}
 		// Non-strict permission routing group
 		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))
