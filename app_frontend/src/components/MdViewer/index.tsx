@@ -1,4 +1,4 @@
-import { Viewer } from "@bytemd/react";
+import {Viewer} from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
 import highlight from "@bytemd/plugin-highlight";
 import "github-markdown-css/github-markdown-light.css";
@@ -7,7 +7,7 @@ import "highlight.js/styles/vs.css";
 import "./index.css";
 
 interface Props {
-  value?: string;
+    value?: string;
 }
 
 const plugins = [gfm(), highlight()];
@@ -18,13 +18,13 @@ const plugins = [gfm(), highlight()];
  * @constructor
  */
 const MdViewer = (props: Props) => {
-  const { value = "" } = props;
+    const {value = ""} = props;
 
-  return (
-    <div className="md-viewer">
-      <Viewer value={value} plugins={plugins} />
-    </div>
-  );
+    return (
+        <div className="md-viewer">
+            <Viewer value={value} plugins={plugins}/>
+        </div>
+    );
 };
 
 export default MdViewer;

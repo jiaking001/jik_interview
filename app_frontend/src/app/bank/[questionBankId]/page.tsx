@@ -1,5 +1,5 @@
 "use server";
-import {Avatar, Card} from "antd";
+import {Avatar, Button, Card} from "antd";
 import "./index.css";
 import {getQuestionBankVoByIdUsingGet} from "@/api/questionBankController";
 import Meta from "antd/es/card/Meta";
@@ -31,6 +31,12 @@ export default async function BankPage({params}) {
         return <div>获取题库列表失败，请刷新重试</div>
     }
 
+    // 获取第一道题目，用于 “开始刷题” 按钮跳转
+    let firstQuestionId;
+    if (bank.questionPage?.records && bank.questionPage.records.length > 0) {
+        firstQuestionId = bank.questionPage.records[0].id;
+    }
+
     return (
         <div id="bankPage" className="max-width-content">
             <Card>
@@ -42,15 +48,29 @@ export default async function BankPage({params}) {
                         </Title>
                     }
                     description={
-                        <Paragraph
-                            type="secondary"
-                        >
-                            {bank.description}
-                        </Paragraph>
+                        <>
+                            <Paragraph type="secondary">
+                                {bank.description}
+                            </Paragraph>
+                            <Button
+                                type="primary"
+                                shape="round"
+                                href={`/bank/${questionBankId}/question/${firstQuestionId}`}
+                                target="_blank"
+                                disabled={!firstQuestionId}
+                            >
+                                开始刷题
+                            </Button>
+                        </>
                     }
                 />
             </Card>
-            <QuestionList questionList={bank.questionPage?.records ?? []}/>
+            <div style={{marginBottom: 16}}></div>
+            <QuestionList
+                questionBankId={questionBankId}
+                questionList={bank.questionPage?.records ?? []}
+                cardTitle={`题目列表（${bank.questionPage?.total || 0}）`}
+            />
         </div>
     )
 }
