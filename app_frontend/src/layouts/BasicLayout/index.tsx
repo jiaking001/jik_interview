@@ -1,7 +1,7 @@
 "use client";
-import {GithubFilled, LogoutOutlined, SearchOutlined,} from '@ant-design/icons';
+import {GithubFilled, LogoutOutlined,} from '@ant-design/icons';
 import {ProLayout,} from '@ant-design/pro-components';
-import {Dropdown, Input, message,} from 'antd';
+import {Dropdown, message,} from 'antd';
 import React from 'react';
 import Image from 'next/image';
 import {usePathname, useRouter} from "next/navigation";
@@ -15,40 +15,7 @@ import getAccessibleMenus from "@/access/menuAccess";
 import {userLogoutUsingPost} from "@/api/userController";
 import {setLoginUser} from "@/stores/loginUser";
 import {DEFAULT_USER} from "@/constants/user";
-
-/**
- * 搜索框
- * @constructor
- */
-const SearchInput = () => {
-    return (
-        <div
-            key="SearchOutlined"
-            aria-hidden
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginInlineEnd: 24,
-            }}
-            onMouseDown={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-        >
-            <Input
-                style={{
-                    borderRadius: 4,
-                    marginInlineEnd: 12,
-                }}
-                prefix={
-                    <SearchOutlined/>
-                }
-                placeholder="搜索题目"
-                variant="borderless"
-            />
-        </div>
-    );
-};
+import SearchInput from "@/layouts/BasicLayout/components/SerchInput";
 
 interface Props {
     children: React.ReactNode;

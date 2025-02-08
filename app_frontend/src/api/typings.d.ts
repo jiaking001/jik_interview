@@ -409,7 +409,7 @@ declare namespace API {
     hasFavour?: boolean;
     hasThumb?: boolean;
     id?: number;
-    tagList?: string[];
+    tags?: string[];
     thumbNum?: number;
     title?: string;
     updateTime?: string;

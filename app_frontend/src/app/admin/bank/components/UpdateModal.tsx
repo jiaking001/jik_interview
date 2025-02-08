@@ -61,7 +61,7 @@ const UpdateModal: React.FC<Props> = (props) => {
         onSubmit={async (values: API.QuestionBankAddRequest) => {
           const success = await handleUpdate({
             ...values,
-            id: oldData.id as any,
+            id: oldData?.id as any,
           });
           if (success) {
             onSubmit?.(values);
