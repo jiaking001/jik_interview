@@ -109,3 +109,12 @@ type UpdateUserRequest struct {
 	UserRole    *string `json:"userRole"`
 	UserProfile *string `json:"userProfile"`
 }
+
+type UserVO struct {
+	CreateTime  *time.Time `json:"createTime,omitempty"`  // 创建时间
+	ID          *int       `json:"id,omitempty"`          // 用户 ID
+	UserAvatar  *string    `json:"userAvatar,omitempty"`  // 用户头像
+	UserName    *string    `json:"userName,omitempty"`    // 用户名
+	UserProfile *string    `json:"userProfile,omitempty"` // 用户简介
+	UserRole    *string    `json:"userRole,omitempty"`    // 用户角色
+}

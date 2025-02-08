@@ -14,6 +14,7 @@ type QuestionBankService interface {
 	DeleteUser(ctx context.Context, req *v1.DeleteQuestionBankRequest) (bool, error)
 	UpdateQuestionBank(ctx context.Context, req *v1.UpdateQuestionBankRequest) (bool, error)
 	GetQuestionBankById(ctx context.Context, req *v1.GetQuestionBankRequest) (v1.GetQuestionBankResponse, error)
+	ListBankByVOPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankVO, error)
 }
 
 func NewQuestionBankService(
@@ -31,8 +32,32 @@ type questionBankService struct {
 	questionBankRepository repository.QuestionBankRepository
 }
 
+func (s *questionBankService) ListBankByVOPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankVO, error) {
+	if req.ID == nil || *req.ID == "" {
+		return v1.QuestionBankVO{}, v1.ParamsError
+	}
+
+	id, err := strconv.ParseUint(*req.ID, 10, 64)
+	if err != nil {
+		return v1.QuestionBankVO{}, v1.ParamsError
+	}
+	bank, err := s.questionBankRepository.GetByID(ctx, id)
+	if err != nil {
+		return v1.QuestionBankVO{}, v1.ParamsError
+	}
+
+	return v1.QuestionBankVO{
+		CreateTime:  &bank.CreateTime,
+		Description: bank.Description,
+		ID:          req.ID,
+		Picture:     bank.Picture,
+		Title:       bank.Title,
+		UpdateTime:  &bank.UpdateTime,
+		UserID:      req.UserID,
+	}, nil
+}
+
 func (s *questionBankService) GetQuestionBankById(ctx context.Context, req *v1.GetQuestionBankRequest) (v1.GetQuestionBankResponse, error) {
-	//TODO 未实现根据题库id查询题库
 	if req == nil || *req.ID == "" {
 		return v1.GetQuestionBankResponse{}, v1.ParamsError
 	}

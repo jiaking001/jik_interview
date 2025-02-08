@@ -87,27 +87,19 @@ type GetQuestionBankResponse struct {
 	User         *UserVO         `json:"user,omitempty"`         // 用户信息
 	UserID       *string         `json:"userId,omitempty"`       // 用户 ID
 }
-type UserVO struct {
-	CreateTime  *time.Time `json:"createTime,omitempty"`  // 创建时间
-	ID          *int       `json:"id,omitempty"`          // 用户 ID
-	UserAvatar  *string    `json:"userAvatar,omitempty"`  // 用户头像
-	UserName    *string    `json:"userName,omitempty"`    // 用户名
-	UserProfile *string    `json:"userProfile,omitempty"` // 用户简介
-	UserRole    *string    `json:"userRole,omitempty"`    // 用户角色
-}
-type PageQuestionVO struct {
-	CountId          *string      `json:"countId,omitempty"`          // 计数 ID
-	Current          *int         `json:"current,omitempty"`          // 当前页码
-	MaxLimit         *int         `json:"maxLimit,omitempty"`         // 最大限制
-	OptimizeCountSql *bool        `json:"optimizeCountSql,omitempty"` // 是否优化计数 SQL
-	Orders           []OrderItem  `json:"orders,omitempty"`           // 排序项
-	Pages            *int         `json:"pages,omitempty"`            // 总页数
-	Records          []QuestionVO `json:"records,omitempty"`          // 问题记录
-	SearchCount      *bool        `json:"searchCount,omitempty"`      // 是否搜索计数
-	Size             *int         `json:"size,omitempty"`             // 每页大小
-	Total            *int         `json:"total,omitempty"`            // 总记录数
-}
 type OrderItem struct {
 	Asc    *bool   `json:"asc,omitempty"`    // 是否升序
 	Column *string `json:"column,omitempty"` // 排序列
+}
+
+type QuestionBankVO struct {
+	CreateTime   *time.Time      `json:"createTime,omitempty"`
+	Description  *string         `json:"description,omitempty"`
+	ID           *string         `json:"id,omitempty"`
+	Picture      *string         `json:"picture,omitempty"`
+	QuestionPage *PageQuestionVO `json:"questionPage,omitempty"`
+	Title        *string         `json:"title,omitempty"`
+	UpdateTime   *time.Time      `json:"updateTime,omitempty"`
+	User         *UserVO         `json:"user,omitempty"`
+	UserID       *string         `json:"userId,omitempty"`
 }

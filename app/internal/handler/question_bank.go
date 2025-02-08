@@ -118,3 +118,28 @@ func (h *QuestionBankHandler) UpdateQuestionBank(ctx *gin.Context) {
 	}
 	v1.HandleSuccess(ctx, ok)
 }
+
+func (h *QuestionBankHandler) ListPageVO(ctx *gin.Context) {
+	var req v1.QuestionBankRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	bank, err := h.questionBankService.ListBankByVOPage(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	id, err := strconv.ParseUint(*req.ID, 10, 64)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	questions, err := h.questionService.ListQuestionByBankId(ctx, id)
+	if err != nil {
+		return
+	}
+	bank.QuestionPage = &questions
+	v1.HandleSuccess(ctx, bank)
+}

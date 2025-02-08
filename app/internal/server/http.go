@@ -79,8 +79,7 @@ func NewHTTPServer(
 			// 题目模块
 			question := noAuthRouter.Group("/question")
 			question.POST("/list/page", questionHandler.ListPage)
-			// TODO 重新实现
-			question.POST("/list/page/vo", questionHandler.ListPage)
+			question.POST("/list/page/vo", questionHandler.ListPageVo)
 			question.POST("/add", questionHandler.AddQuestion)
 			question.POST("/delete", questionHandler.DeleteQuestion)
 			question.POST("/update", questionHandler.UpdateQuestion)

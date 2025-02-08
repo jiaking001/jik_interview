@@ -80,3 +80,15 @@ type QuestionVO struct {
 	User       *UserVO    `json:"user,omitempty"`       // 用户信息
 	UserID     *string    `json:"userId,omitempty"`     // 用户 ID
 }
+type PageQuestionVO struct {
+	CountId          *string      `json:"countId,omitempty"`          // 计数 ID
+	Current          *int         `json:"current,omitempty"`          // 当前页码
+	MaxLimit         *int         `json:"maxLimit,omitempty"`         // 最大限制
+	OptimizeCountSql *bool        `json:"optimizeCountSql,omitempty"` // 是否优化计数 SQL
+	Orders           []OrderItem  `json:"orders,omitempty"`           // 排序项
+	Pages            *int         `json:"pages,omitempty"`            // 总页数
+	Records          []QuestionVO `json:"records,omitempty"`          // 问题记录
+	SearchCount      *bool        `json:"searchCount,omitempty"`      // 是否搜索计数
+	Size             *int         `json:"size,omitempty"`             // 每页大小
+	Total            *int         `json:"total,omitempty"`            // 总记录数
+}
