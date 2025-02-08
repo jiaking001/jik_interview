@@ -39,7 +39,7 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	questionHandler := handler.NewQuestionHandler(handlerHandler, questionService)
 	questionBankRepository := repository.NewQuestionBankRepository(repositoryRepository)
 	questionBankService := service.NewQuestionBankService(serviceService, questionBankRepository)
-	questionBankHandler := handler.NewQuestionBankHandler(handlerHandler, questionBankService)
+	questionBankHandler := handler.NewQuestionBankHandler(handlerHandler, questionBankService, questionService)
 	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler, questionHandler, questionBankHandler)
 	jobJob := job.NewJob(transaction, logger, sidSid)
 	userJob := job.NewUserJob(jobJob, userRepository)

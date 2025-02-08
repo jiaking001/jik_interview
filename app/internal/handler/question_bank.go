@@ -5,20 +5,24 @@ import (
 	"app/internal/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type QuestionBankHandler struct {
 	*Handler
 	questionBankService service.QuestionBankService
+	questionService     service.QuestionService
 }
 
 func NewQuestionBankHandler(
 	handler *Handler,
 	questionBankService service.QuestionBankService,
+	questionService service.QuestionService,
 ) *QuestionBankHandler {
 	return &QuestionBankHandler{
 		Handler:             handler,
 		questionBankService: questionBankService,
+		questionService:     questionService,
 	}
 }
 
@@ -43,6 +47,31 @@ func (h *QuestionBankHandler) ListPage(ctx *gin.Context) {
 		Current: page.Current,
 		Pages:   page.Pages,
 	})
+}
+
+func (h *QuestionBankHandler) GetQuestionBank(ctx *gin.Context) {
+	var req v1.GetQuestionBankRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+	bank, err := h.questionBankService.GetQuestionBankById(ctx, &req)
+	id, err := strconv.ParseUint(*req.ID, 10, 64)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	questionPage, err := h.questionService.ListQuestionByBankId(ctx, id)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	pages := *questionPage.Total / *req.PageSize + 1
+	questionPage.Current = req.Current
+	questionPage.Pages = &pages
+	questionPage.Size = req.PageSize
+	bank.QuestionPage = &questionPage
+	v1.HandleSuccess(ctx, bank)
 }
 
 func (h *QuestionBankHandler) AddQuestionBank(ctx *gin.Context) {

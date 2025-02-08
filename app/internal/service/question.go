@@ -5,16 +5,16 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"context"
-	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
 )
 
 type QuestionService interface {
 	ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error)
-	AddQuestion(ctx *gin.Context, req *v1.AddQuestionRequest, id uint64) (string, error)
-	DeleteQuestion(ctx *gin.Context, req *v1.DeleteQuestionRequest) (bool, error)
-	UpdateQuestion(ctx *gin.Context, req *v1.UpdateQuestionRequest) (bool, error)
+	AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error)
+	DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error)
+	UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error)
+	ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error)
 }
 
 func NewQuestionService(
@@ -32,7 +32,42 @@ type questionService struct {
 	questionRepository repository.QuestionRepository
 }
 
-func (s *questionService) UpdateQuestion(ctx *gin.Context, req *v1.UpdateQuestionRequest) (bool, error) {
+func (s *questionService) ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error) {
+	questions, err := s.questionRepository.GetQuestion(ctx)
+	if err != nil {
+		return v1.PageQuestionVO{}, err
+	}
+	var questionList []v1.QuestionVO
+	for _, question := range questions {
+		var id, userId string
+		id = strconv.Itoa(int(question.ID))
+		userId = strconv.Itoa(int(question.UserID))
+		q := v1.QuestionVO{
+			Answer:     question.Answer,
+			Content:    question.Content,
+			CreateTime: &question.CreateTime,
+			ID:         &id,
+			// TagList:    question.Tags,
+			Title:      question.Title,
+			UpdateTime: &question.UpdateTime,
+			// User:       question.User,
+			UserID: &userId,
+		}
+		questionList = append(questionList, q)
+	}
+
+	total, err := s.questionRepository.GetCount(ctx)
+	if err != nil {
+		return v1.PageQuestionVO{}, err
+	}
+
+	return v1.PageQuestionVO{
+		Records: questionList,
+		Total:   &total,
+	}, nil
+}
+
+func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error) {
 	if req == nil || *req.ID == "" {
 		return false, v1.ParamsError
 	}
@@ -76,7 +111,7 @@ func (s *questionService) UpdateQuestion(ctx *gin.Context, req *v1.UpdateQuestio
 	return true, nil
 }
 
-func (s *questionService) DeleteQuestion(ctx *gin.Context, req *v1.DeleteQuestionRequest) (bool, error) {
+func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error) {
 	if req.Id <= "0" {
 		return false, v1.ParamsError
 	}
@@ -100,7 +135,7 @@ func (s *questionService) DeleteQuestion(ctx *gin.Context, req *v1.DeleteQuestio
 	return true, nil
 }
 
-func (s *questionService) AddQuestion(ctx *gin.Context, req *v1.AddQuestionRequest, id uint64) (string, error) {
+func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error) {
 	if *req.Title == "" {
 		return "", v1.ErrIllegalAccount
 	}

@@ -69,13 +69,17 @@ func NewHTTPServer(
 			// 题库模块
 			questionBank := noAuthRouter.Group("/questionBank")
 			questionBank.POST("/list/page", questionBankHandler.ListPage)
+			// TODO 重新实现
+			questionBank.POST("/list/page/vo", questionBankHandler.ListPage)
 			questionBank.POST("/add", questionBankHandler.AddQuestionBank)
 			questionBank.POST("/delete", questionBankHandler.DeleteQuestionBank)
 			questionBank.POST("/update", questionBankHandler.UpdateQuestionBank)
-
+			questionBank.GET("/get/vo", questionBankHandler.GetQuestionBank)
 			// 题目模块
 			question := noAuthRouter.Group("/question")
 			question.POST("/list/page", questionHandler.ListPage)
+			// TODO 重新实现
+			question.POST("/list/page/vo", questionHandler.ListPage)
 			question.POST("/add", questionHandler.AddQuestion)
 			question.POST("/delete", questionHandler.DeleteQuestion)
 			question.POST("/update", questionHandler.UpdateQuestion)
