@@ -63,3 +63,20 @@ type UpdateQuestionRequest struct {
 	Tags    []string `json:"tags,omitempty"`    // 标签列表
 	Title   *string  `json:"title,omitempty"`   // 标题
 }
+
+// 获取题目详情
+
+type GetQuestionRequest struct {
+	ID *string `form:"id,omitempty"` // ID
+}
+type QuestionVO struct {
+	Answer     *string    `json:"answer,omitempty"`     // 回答内容
+	Content    *string    `json:"content,omitempty"`    // 问题内容
+	CreateTime *time.Time `json:"createTime,omitempty"` // 创建时间
+	ID         *string    `json:"id,omitempty"`         // 问题 ID
+	TagList    []string   `json:"tagList,omitempty"`    // 标签列表
+	Title      *string    `json:"title,omitempty"`      // 问题标题
+	UpdateTime *time.Time `json:"updateTime,omitempty"` // 更新时间
+	User       *UserVO    `json:"user,omitempty"`       // 用户信息
+	UserID     *string    `json:"userId,omitempty"`     // 用户 ID
+}

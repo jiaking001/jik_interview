@@ -5,6 +5,7 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"context"
+	"encoding/json"
 	"strconv"
 	"strings"
 )
@@ -15,6 +16,7 @@ type QuestionService interface {
 	DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error)
 	UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error)
 	ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error)
+	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
 }
 
 func NewQuestionService(
@@ -30,6 +32,45 @@ func NewQuestionService(
 type questionService struct {
 	*Service
 	questionRepository repository.QuestionRepository
+}
+
+func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error) {
+	if req.ID == nil || *req.ID == "" {
+		return v1.QuestionVO{}, v1.ParamsError
+	}
+
+	id, err := strconv.ParseUint(*req.ID, 10, 64)
+	if err != nil {
+		return v1.QuestionVO{}, v1.ParamsError
+	}
+	question, err := s.questionRepository.GetByID(ctx, id)
+	if err != nil {
+		return v1.QuestionVO{}, err
+	}
+
+	// 原始的 JSON 格式的字符串
+	jsonStr := question.Tags
+
+	// 定义一个字符串数组变量来存储解析后的结果
+	var tagList []string
+
+	// 使用 json.Unmarshal 解析 JSON 字符串
+	err = json.Unmarshal([]byte(*jsonStr), &tagList)
+	if err != nil {
+		return v1.QuestionVO{}, err
+	}
+
+	userId := strconv.FormatUint(question.UserID, 10)
+	return v1.QuestionVO{
+		Answer:     question.Answer,
+		Content:    question.Content,
+		CreateTime: &question.CreateTime,
+		ID:         req.ID,
+		TagList:    tagList,
+		Title:      question.Title,
+		UpdateTime: &question.UpdateTime,
+		UserID:     &userId,
+	}, nil
 }
 
 func (s *questionService) ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error) {

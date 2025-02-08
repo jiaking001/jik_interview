@@ -102,3 +102,18 @@ func (h *QuestionHandler) UpdateQuestion(ctx *gin.Context) {
 	}
 	v1.HandleSuccess(ctx, ok)
 }
+
+func (h *QuestionHandler) GetQuestion(ctx *gin.Context) {
+	var req v1.GetQuestionRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+	question, err := h.questionService.GetQuestionById(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, question)
+}
