@@ -7,10 +7,16 @@
 package wire
 
 import (
+	"app/internal/handler"
+	"app/internal/job"
 	"app/internal/repository"
 	"app/internal/server"
+	"app/internal/service"
 	"app/pkg/app"
+	"app/pkg/jwt"
 	"app/pkg/log"
+	"app/pkg/server/http"
+	"app/pkg/sid"
 	"github.com/google/wire"
 	"github.com/spf13/viper"
 )
@@ -18,22 +24,51 @@ import (
 // Injectors from wire.go:
 
 func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), error) {
+	jwtJWT := jwt.NewJwt(viperViper)
+	handlerHandler := handler.NewHandler(logger)
 	db := repository.NewDB(viperViper, logger)
-	migrateServer := server.NewMigrateServer(db, logger)
-	appApp := newApp(migrateServer)
+	repositoryRepository := repository.NewRepository(logger, db)
+	transaction := repository.NewTransaction(repositoryRepository)
+	sidSid := sid.NewSid()
+	serviceService := service.NewService(transaction, logger, sidSid, jwtJWT)
+	userRepository := repository.NewUserRepository(repositoryRepository)
+	userService := service.NewUserService(serviceService, userRepository)
+	userHandler := handler.NewUserHandler(handlerHandler, userService)
+	questionRepository := repository.NewQuestionRepository(repositoryRepository)
+	questionService := service.NewQuestionService(serviceService, questionRepository)
+	questionHandler := handler.NewQuestionHandler(handlerHandler, questionService)
+	questionBankRepository := repository.NewQuestionBankRepository(repositoryRepository)
+	questionBankService := service.NewQuestionBankService(serviceService, questionBankRepository)
+	questionBankHandler := handler.NewQuestionBankHandler(handlerHandler, questionBankService, questionService)
+	questionBankQuestionRepository := repository.NewQuestionBankQuestionRepository(repositoryRepository)
+	questionBankQuestionService := service.NewQuestionBankQuestionService(serviceService, questionBankQuestionRepository)
+	questionBankQuestionHandler := handler.NewQuestionBankQuestionHandler(handlerHandler, questionBankQuestionService)
+	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler, questionHandler, questionBankHandler, questionBankQuestionHandler)
+	jobJob := job.NewJob(transaction, logger, sidSid)
+	userJob := job.NewUserJob(jobJob, userRepository)
+	jobServer := server.NewJobServer(logger, userJob)
+	appApp := newApp(httpServer, jobServer)
 	return appApp, func() {
 	}, nil
 }
 
 // wire.go:
 
-var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository, repository.NewUserRepository, repository.NewQuestionRepository, repository.NewQuestionBankRepository, repository.NewQuestionBankQuestionRepository)
+var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository, repository.NewQuestionBankQuestionRepository)
 
-var serverSet = wire.NewSet(server.NewMigrateServer)
+var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewQuestionBankService, service.NewQuestionService, service.NewQuestionBankQuestionService)
+
+var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewQuestionBankHandler, handler.NewQuestionHandler, handler.NewQuestionBankQuestionHandler)
+
+var jobSet = wire.NewSet(job.NewJob, job.NewUserJob)
+
+var serverSet = wire.NewSet(server.NewHTTPServer, server.NewJobServer)
 
 // build App
 func newApp(
-	migrateServer *server.MigrateServer,
+	httpServer *http.Server,
+	jobServer *server.JobServer,
+
 ) *app.App {
-	return app.NewApp(app.WithServer(migrateServer), app.WithName("demo-migrate"))
+	return app.NewApp(app.WithServer(httpServer, jobServer), app.WithName("demo-server"))
 }

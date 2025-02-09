@@ -148,7 +148,6 @@ func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 }
 
 func (h *UserHandler) ListPage(ctx *gin.Context) {
-	// TODO 排序，查找特定值未实现
 	var req v1.UserQueryRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)

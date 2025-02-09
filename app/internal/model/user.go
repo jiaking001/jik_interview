@@ -15,7 +15,7 @@ type User struct {
 	MpOpenId     *string        `gorm:"type:varchar(256);comment:'公众号openId'"`                                   // 公众号openId
 	UserName     *string        `gorm:"type:varchar(256);comment:'用户昵称'"`                                        // 用户昵称
 	UserAvatar   *string        `gorm:"type:varchar(1024);comment:'用户头像'"`                                       // 用户头像
-	UserProfile  *string        `gorm:"type:varchar(512);comment:'用户简介'"`                                        // 用户简介
+	UserProfile  *string        `gorm:"type:varchar(512);comment:'用户简介';default:'该用户未填写简介'"`                     // 用户简介
 	UserRole     string         `gorm:"type:varchar(256);default:'user';not null;comment:'用户角色：user/admin/ban'"` // 用户角色
 	EditTime     time.Time      `gorm:"type:datetime;default:CURRENT_TIMESTAMP;comment:'编辑时间'"`                  // 编辑时间
 	CreateTime   time.Time      `gorm:"type:datetime;default:CURRENT_TIMESTAMP;comment:'创建时间'"`                  // 创建时间

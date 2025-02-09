@@ -13,7 +13,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *model.User) error
 	GetByID(ctx context.Context, id uint64) (*model.User, error)
 	GetByAccount(ctx context.Context, account string) (*model.User, error)
-	GetUser(ctx context.Context) ([]*model.User, error)
+	GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, error)
 	DeleteById(ctx context.Context, user *model.User, id uint64) error
 	GetCount(ctx context.Context) (int, error)
 }
@@ -46,10 +46,48 @@ func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id ui
 	return nil
 }
 
-func (r *userRepository) GetUser(ctx context.Context) ([]*model.User, error) {
+func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, error) {
 	var users []*model.User
-	if err := r.DB(ctx).Find(&users).Error; err != nil {
-		return nil, v1.ErrNotFound
+	var s string
+	if req.SortOrder != nil && req.SortField != nil {
+		var sortOrder string
+		var sortField string
+		if *req.SortField == "createTime" {
+			sortField = "create_time"
+		} else {
+			sortField = "update_time"
+		}
+		if *req.SortOrder == "ascend" {
+			sortOrder = "asc"
+		} else {
+			sortOrder = "desc"
+		}
+		s = sortField + " " + sortOrder
+	}
+	var id, userAccount, userName, userRole, userProfile string
+	if req.ID != nil {
+		id = *req.ID
+	}
+	if req.UserName != nil {
+		userName = *req.UserName
+	}
+	if req.UserAccount != nil {
+		userAccount = *req.UserAccount
+	}
+	if req.UserRole != nil {
+		userRole = *req.UserRole
+	}
+	if req.UserProfile != nil {
+		userProfile = *req.UserProfile
+	}
+	if err := r.DB(ctx).Where("id LIKE ? AND user_account LIKE ? AND user_name LIKE ? AND user_role LIKE ? AND user_profile LIKE ?",
+		"%"+id+"%",
+		"%"+userAccount+"%",
+		"%"+userName+"%",
+		"%"+userRole+"%",
+		"%"+userProfile+"%",
+	).Order(s).Find(&users).Error; err != nil {
+		return nil, err
 	}
 	return users, nil
 }
