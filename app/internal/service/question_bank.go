@@ -169,7 +169,7 @@ func (s *questionBankService) AddQuestionBank(ctx context.Context, req *v1.AddQu
 func (s *questionBankService) ListBankByPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankQueryResponseData[v1.QuestionBank], error) {
 	current := req.Current
 	size := req.PageSize
-	questionBanks, err := s.questionBankRepository.GetQuestionBank(ctx)
+	questionBanks, total, err := s.questionBankRepository.GetQuestionBank(ctx, req)
 	if err != nil {
 		return v1.QuestionBankQueryResponseData[v1.QuestionBank]{}, err
 	}
@@ -190,10 +190,6 @@ func (s *questionBankService) ListBankByPage(ctx context.Context, req *v1.Questi
 			UserID:      &userId,
 		}
 		questionBankList = append(questionBankList, q)
-	}
-	total, err := s.questionBankRepository.GetCount(ctx)
-	if err != nil {
-		return v1.QuestionBankQueryResponseData[v1.QuestionBank]{}, err
 	}
 	pages := total / *size + 1
 	return v1.QuestionBankQueryResponseData[v1.QuestionBank]{

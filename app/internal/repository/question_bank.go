@@ -9,7 +9,7 @@ import (
 )
 
 type QuestionBankRepository interface {
-	GetQuestionBank(ctx context.Context) ([]model.QuestionBank, error)
+	GetQuestionBank(ctx context.Context, req *v1.QuestionBankRequest) ([]model.QuestionBank, int, error)
 	GetByTitle(ctx context.Context, title string) (*model.QuestionBank, error)
 	Create(ctx context.Context, bank *model.QuestionBank) error
 	GetCount(ctx context.Context) (int, error)
@@ -82,10 +82,41 @@ func (r *questionBankRepository) GetByTitle(ctx context.Context, title string) (
 	return &questionBank, nil
 }
 
-func (r *questionBankRepository) GetQuestionBank(ctx context.Context) ([]model.QuestionBank, error) {
+func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.QuestionBankRequest) ([]model.QuestionBank, int, error) {
 	var questionBanks []model.QuestionBank
-	if err := r.DB(ctx).Find(&questionBanks).Error; err != nil {
-		return nil, v1.ErrNotFound
+	var total int64
+	var s string
+	if req.SortOrder != nil && req.SortField != nil {
+		var sortOrder string
+		var sortField string
+		if *req.SortField == "createTime" {
+			sortField = "create_time"
+		} else {
+			sortField = "update_time"
+		}
+		if *req.SortOrder == "ascend" {
+			sortOrder = "asc"
+		} else {
+			sortOrder = "desc"
+		}
+		s = sortField + " " + sortOrder
 	}
-	return questionBanks, nil
+	var id, title, description string
+	if req.ID != nil {
+		id = *req.ID
+	}
+	if req.Title != nil {
+		title = *req.Title
+	}
+	if req.Description != nil {
+		description = *req.Description
+	}
+	if err := r.DB(ctx).Where("id LIKE ? AND title LIKE ? AND description LIKE ?",
+		"%"+id+"%",
+		"%"+title+"%",
+		"%"+description+"%",
+	).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
+		return nil, 0, v1.ErrNotFound
+	}
+	return questionBanks, int(total), nil
 }

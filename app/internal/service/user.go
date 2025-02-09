@@ -140,7 +140,7 @@ func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64,
 func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error) {
 	current := req.Current
 	size := req.PageSize
-	users, err := s.userRepo.GetUser(ctx, req)
+	users, total, err := s.userRepo.GetUser(ctx, req)
 	if err != nil {
 		return v1.PageResult[v1.User]{}, err
 	}
@@ -164,10 +164,6 @@ func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest)
 			IsDelete:     &v.IsDelete,
 		}
 		user = append(user, u)
-	}
-	total, err := s.userRepo.GetCount(ctx)
-	if err != nil {
-		return v1.PageResult[v1.User]{}, err
 	}
 	pages := total / *size + 1
 	return v1.PageResult[v1.User]{

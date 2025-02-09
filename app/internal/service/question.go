@@ -38,7 +38,7 @@ type questionService struct {
 func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {
 	current := req.Current
 	size := req.PageSize
-	questions, err := s.questionRepository.GetQuestion(ctx)
+	questions, total, err := s.questionRepository.GetQuestion(ctx, req)
 	if err != nil {
 		return v1.PageQuestionVO{}, err
 	}
@@ -72,10 +72,6 @@ func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.Ques
 			UserID:     &userId,
 		}
 		questionVOList = append(questionVOList, q)
-	}
-	total, err := s.questionRepository.GetCount(ctx)
-	if err != nil {
-		return v1.PageQuestionVO{}, err
 	}
 	pages := total / *size + 1
 	return v1.PageQuestionVO{
@@ -279,7 +275,7 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 func (s *questionService) ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error) {
 	current := req.Current
 	size := req.PageSize
-	questions, err := s.questionRepository.GetQuestion(ctx)
+	questions, total, err := s.questionRepository.GetQuestion(ctx, req)
 	if err != nil {
 		return v1.QuestionQueryResponseData[v1.Question]{}, err
 	}
@@ -301,10 +297,6 @@ func (s *questionService) ListQuestionByPage(ctx context.Context, req *v1.Questi
 			UserID:     &userId,
 		}
 		questionList = append(questionList, q)
-	}
-	total, err := s.questionRepository.GetCount(ctx)
-	if err != nil {
-		return v1.QuestionQueryResponseData[v1.Question]{}, err
 	}
 	pages := total / *size + 1
 	return v1.QuestionQueryResponseData[v1.Question]{

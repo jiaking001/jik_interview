@@ -13,7 +13,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *model.User) error
 	GetByID(ctx context.Context, id uint64) (*model.User, error)
 	GetByAccount(ctx context.Context, account string) (*model.User, error)
-	GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, error)
+	GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, int, error)
 	DeleteById(ctx context.Context, user *model.User, id uint64) error
 	GetCount(ctx context.Context) (int, error)
 }
@@ -46,8 +46,9 @@ func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id ui
 	return nil
 }
 
-func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, error) {
+func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, int, error) {
 	var users []*model.User
+	var total int64
 	var s string
 	if req.SortOrder != nil && req.SortField != nil {
 		var sortOrder string
@@ -86,10 +87,10 @@ func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) 
 		"%"+userName+"%",
 		"%"+userRole+"%",
 		"%"+userProfile+"%",
-	).Order(s).Find(&users).Error; err != nil {
-		return nil, err
+	).Order(s).Find(&users).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return users, nil
+	return users, int(total), nil
 }
 
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {

@@ -9,7 +9,7 @@ import (
 )
 
 type QuestionRepository interface {
-	GetQuestion(ctx context.Context) ([]model.Question, error)
+	GetQuestion(ctx context.Context, req *v1.QuestionRequest) ([]model.Question, int, error)
 	GetCount(ctx context.Context) (int, error)
 	Create(ctx context.Context, question *model.Question) error
 	GetByTitle(ctx context.Context, title string) (*model.Question, error)
@@ -94,10 +94,51 @@ func (r *questionRepository) GetCount(ctx context.Context) (int, error) {
 	return int(total), nil
 }
 
-func (r *questionRepository) GetQuestion(ctx context.Context) ([]model.Question, error) {
+func (r *questionRepository) GetQuestion(ctx context.Context, req *v1.QuestionRequest) ([]model.Question, int, error) {
 	var questions []model.Question
-	if err := r.DB(ctx).Find(&questions).Error; err != nil {
-		return nil, v1.ErrNotFound
+	var total int64
+	var s string
+	if req.SortOrder != nil && req.SortField != nil {
+		var sortOrder string
+		var sortField string
+		if *req.SortField == "createTime" {
+			sortField = "question.create_time"
+		} else {
+			sortField = "question.update_time"
+		}
+		if *req.SortOrder == "ascend" {
+			sortOrder = "asc"
+		} else {
+			sortOrder = "desc"
+		}
+		s = sortField + " " + sortOrder
 	}
-	return questions, nil
+	var id, title, userId, questionBankID string
+	if req.ID != nil {
+		id = *req.ID
+	}
+	if req.Title != nil {
+		title = *req.Title
+	}
+	if req.UserID != nil {
+		userId = *req.UserID
+	}
+	if req.QuestionBankID != nil {
+		questionBankID = *req.QuestionBankID
+	}
+	// TODO 未实现根据标签查询
+	if err := r.DB(ctx).Joins("INNER JOIN question_bank_question "+
+		"ON question.id = question_bank_question.question_id").Where(""+
+		"question.id LIKE ? AND "+
+		"question.title LIKE ? AND "+
+		"question.user_id LIKE ? AND "+
+		"question_bank_question.question_bank_id LIKE ?",
+		"%"+id+"%",
+		"%"+title+"%",
+		"%"+userId+"%",
+		"%"+questionBankID+"%",
+	).Order(s).Distinct().Find(&questions).Group("question.id").Count(&total).Error; err != nil {
+		return nil, 0, v1.ErrNotFound
+	}
+	return questions, int(total), nil
 }

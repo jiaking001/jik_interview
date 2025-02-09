@@ -27,7 +27,6 @@ func NewQuestionBankHandler(
 }
 
 func (h *QuestionBankHandler) ListPage(ctx *gin.Context) {
-	// TODO 排序，查找特定值未实现
 	var req v1.QuestionBankRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
