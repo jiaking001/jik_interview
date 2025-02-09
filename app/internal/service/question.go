@@ -15,7 +15,7 @@ type QuestionService interface {
 	AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error)
 	DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error)
 	UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error)
-	ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error)
+	ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error)
 	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
 	ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
 }
@@ -126,9 +126,8 @@ func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuesti
 	}, nil
 }
 
-func (s *questionService) ListQuestionByBankId(ctx context.Context, id uint64) (v1.PageQuestionVO, error) {
-	//TODO 未实现根据题库id查询题库
-	questions, err := s.questionRepository.GetQuestion(ctx)
+func (s *questionService) ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error) {
+	questions, total, err := s.questionRepository.GetQuestionByBankId(ctx, bankId)
 	if err != nil {
 		return v1.PageQuestionVO{}, err
 	}
@@ -163,15 +162,10 @@ func (s *questionService) ListQuestionByBankId(ctx context.Context, id uint64) (
 		}
 		questionList = append(questionList, q)
 	}
-
-	total, err := s.questionRepository.GetCount(ctx)
-	if err != nil {
-		return v1.PageQuestionVO{}, err
-	}
-
+	t := int(total)
 	return v1.PageQuestionVO{
 		Records: questionList,
-		Total:   &total,
+		Total:   &t,
 	}, nil
 }
 

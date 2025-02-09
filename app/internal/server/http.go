@@ -22,6 +22,7 @@ func NewHTTPServer(
 	userHandler *handler.UserHandler,
 	questionHandler *handler.QuestionHandler,
 	questionBankHandler *handler.QuestionBankHandler,
+	questionBankQuestionHandler *handler.QuestionBankQuestionHandler,
 ) *http.Server {
 	gin.SetMode(gin.DebugMode)
 	s := http.NewServer(
@@ -69,7 +70,6 @@ func NewHTTPServer(
 			// 题库模块
 			questionBank := noAuthRouter.Group("/questionBank")
 			questionBank.POST("/list/page", questionBankHandler.ListPage)
-			// TODO 重新实现
 			questionBank.POST("/list/page/vo", questionBankHandler.ListPage)
 			questionBank.POST("/add", questionBankHandler.AddQuestionBank)
 			questionBank.POST("/delete", questionBankHandler.DeleteQuestionBank)
@@ -84,6 +84,12 @@ func NewHTTPServer(
 			question.POST("/delete", questionHandler.DeleteQuestion)
 			question.POST("/update", questionHandler.UpdateQuestion)
 			question.GET("/get/vo", questionHandler.GetQuestion)
+
+			// 题目题库模块
+			questionBankQuestion := noAuthRouter.Group("/questionBankQuestion")
+			questionBankQuestion.POST("/list/page/vo", questionBankQuestionHandler.GetQuestionBankQuestion)
+			questionBankQuestion.POST("/add", questionBankQuestionHandler.AddQuestionBankQuestion)
+			questionBankQuestion.POST("remove", questionBankQuestionHandler.RemoveQuestionBankQuestion)
 		}
 		// Non-strict permission routing group
 		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))

@@ -16,6 +16,7 @@ type QuestionRepository interface {
 	GetByID(ctx context.Context, id uint64) (*model.Question, error)
 	DeleteById(ctx context.Context, question *model.Question, id uint64) error
 	Update(ctx context.Context, question *model.Question) error
+	GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error)
 }
 
 func NewQuestionRepository(
@@ -28,6 +29,17 @@ func NewQuestionRepository(
 
 type questionRepository struct {
 	*Repository
+}
+
+func (r *questionRepository) GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error) {
+	var questions []model.Question
+	var total int64
+	if err := r.DB(ctx).Joins("INNER JOIN question_bank_question ON question.id = question_bank_question.question_id").
+		Where("question_bank_question.question_bank_id = ?", bankId).
+		Find(&questions).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	return questions, total, nil
 }
 
 func (r *questionRepository) Update(ctx context.Context, question *model.Question) error {
