@@ -15,7 +15,7 @@ export default async function HomePage() {
     try {
         const questionBankRes = await listQuestionBankVoByPageUsingPost({
             pageSize: 200,
-            sortField: 'createTime',
+            sortField: 'updateTime',
             sortOrder: 'descend',
         });
         questionBankList = questionBankRes.data.records ?? [];

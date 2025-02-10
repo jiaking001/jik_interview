@@ -20,7 +20,7 @@ export default async function HomePage() {
     try {
         const questionBankRes = await listQuestionBankVoByPageUsingPost({
             pageSize: 12,
-            sortField: 'createTime',
+            sortField: 'updateTime',
             sortOrder: 'descend',
         });
         questionBankList = questionBankRes.data.records ?? [];
@@ -31,7 +31,7 @@ export default async function HomePage() {
     try {
         const questionListRes = await listQuestionVoByPageUsingPost({
             pageSize: 12,
-            sortField: 'createTime',
+            sortField: 'updateTime',
             sortOrder: 'descend',
         });
         questionList = questionListRes.data.records ?? [];
