@@ -66,6 +66,8 @@ func NewHTTPServer(
 			user.POST("/add", userHandler.AddUser)
 			user.POST("/delete", userHandler.DeleteUser)
 			user.POST("/update", userHandler.UpdateUser)
+			user.POST("/add/sign_in", userHandler.AddUserSignIn)
+			user.GET("/get/sign_in", userHandler.GetUserSignIn)
 
 			// 题库模块
 			questionBank := noAuthRouter.Group("/questionBank")

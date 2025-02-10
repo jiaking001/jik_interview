@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -212,4 +213,51 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 		return
 	}
 	v1.HandleSuccess(ctx, ok)
+}
+
+func (h *UserHandler) AddUserSignIn(ctx *gin.Context) {
+	// 必须要登录才能签到
+	session := sessions.Default(ctx)
+	userInterface := session.Get("user_login")
+	if userInterface == nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
+	user := userInterface.(*model.User)
+	result, err := h.userService.AddUserSignIn(ctx, user.ID)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, result)
+}
+
+func (h *UserHandler) GetUserSignIn(ctx *gin.Context) {
+	// 必须要登录才能获取签到记录
+	session := sessions.Default(ctx)
+	userInterface := session.Get("user_login")
+	if userInterface == nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
+	user := userInterface.(*model.User)
+	var req v1.GetUserSignInRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+	var year int
+	if req.Year == nil {
+		date := time.Now()
+		year = date.Year()
+	} else {
+		year = *req.Year
+	}
+	var dayList []int
+	dayList, err := h.userService.GetUserSignIn(ctx, user.ID, year)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, dayList)
 }

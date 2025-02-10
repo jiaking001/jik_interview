@@ -118,3 +118,7 @@ type UserVO struct {
 	UserProfile *string    `json:"userProfile,omitempty"` // 用户简介
 	UserRole    *string    `json:"userRole,omitempty"`    // 用户角色
 }
+
+type GetUserSignInRequest struct {
+	Year *int `from:"year,omitempty"`
+}

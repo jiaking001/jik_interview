@@ -16,6 +16,8 @@ type UserRepository interface {
 	GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, int, error)
 	DeleteById(ctx context.Context, user *model.User, id uint64) error
 	GetCount(ctx context.Context) (int, error)
+	AddUserSignIn(ctx context.Context, key string, offset int64) error
+	GetUserSignIn(ctx context.Context, key string) ([]int64, error)
 }
 
 func NewUserRepository(
@@ -28,6 +30,22 @@ func NewUserRepository(
 
 type userRepository struct {
 	*Repository
+}
+
+func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]int64, error) {
+	segments := []any{
+		"GET", "i64", "0",
+		"GET", "i64", "64",
+		"GET", "i64", "128",
+		"GET", "i64", "192",
+		"GET", "i64", "256",
+		"GET", "i64", "320",
+	}
+	return r.rdb.BitField(ctx, key, segments...).Result()
+}
+
+func (r *userRepository) AddUserSignIn(ctx context.Context, key string, offset int64) error {
+	return r.rdb.SetBit(ctx, key, offset, 1).Err()
 }
 
 func (r *userRepository) GetCount(ctx context.Context) (int, error) {

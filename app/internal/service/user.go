@@ -4,8 +4,8 @@ import (
 	v1 "app/api/v1"
 	"app/internal/model"
 	"app/internal/repository"
+	"app/pkg/constant"
 	"context"
-	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
@@ -14,11 +14,13 @@ import (
 type UserService interface {
 	Register(ctx context.Context, req *v1.RegisterRequest) error
 	Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error)
-	GetLoginUser(ctx *gin.Context) error
-	ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error)
-	AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64, error)
-	DeleteUser(ctx *gin.Context, req *v1.DeleteUserRequest) (bool, error)
-	UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (bool, error)
+	GetLoginUser(ctx context.Context) error
+	ListUserByPage(ctx context.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error)
+	AddUser(ctx context.Context, req *v1.AddUserRequest) (uint64, error)
+	DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (bool, error)
+	UpdateUser(ctx context.Context, req *v1.UpdateUserRequest) (bool, error)
+	AddUserSignIn(ctx context.Context, id uint64) (bool, error)
+	GetUserSignIn(ctx context.Context, id uint64, year int) ([]int, error)
 }
 
 func NewUserService(
@@ -36,7 +38,44 @@ type userService struct {
 	*Service
 }
 
-func (s *userService) UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (bool, error) {
+func (s *userService) GetUserSignIn(ctx context.Context, id uint64, year int) ([]int, error) {
+	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(id, 10))
+	bitset, err := s.userRepo.GetUserSignIn(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	var dayList []int
+	offset := 0
+
+	for {
+		// 使用 nextSetBit 获取下一个签到的天数
+		nextOffset := constant.NextSetBit(bitset, offset)
+		if nextOffset == -1 {
+			break
+		}
+
+		// 将签到的天数添加到结果列表中
+		dayList = append(dayList, nextOffset)
+
+		// 更新偏移量，继续查找下一个签到的天数
+		offset = nextOffset + 1
+	}
+	return dayList, nil
+}
+
+func (s *userService) AddUserSignIn(ctx context.Context, id uint64) (bool, error) {
+	date := time.Now()
+	year := date.Year()
+	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(id, 10))
+	offset := date.YearDay()
+	err := s.userRepo.AddUserSignIn(ctx, key, int64(offset))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *userService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest) (bool, error) {
 	if req == nil || req.Id == "" {
 		return false, v1.ParamsError
 	}
@@ -73,7 +112,7 @@ func (s *userService) UpdateUser(ctx *gin.Context, req *v1.UpdateUserRequest) (b
 	return true, nil
 }
 
-func (s *userService) DeleteUser(ctx *gin.Context, req *v1.DeleteUserRequest) (bool, error) {
+func (s *userService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (bool, error) {
 	if req.Id <= "0" {
 		return false, v1.ParamsError
 	}
@@ -97,7 +136,7 @@ func (s *userService) DeleteUser(ctx *gin.Context, req *v1.DeleteUserRequest) (b
 	return true, nil
 }
 
-func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64, error) {
+func (s *userService) AddUser(ctx context.Context, req *v1.AddUserRequest) (uint64, error) {
 	if *req.UserAccount == "" {
 		return 0, v1.ErrIllegalAccount
 	}
@@ -137,7 +176,7 @@ func (s *userService) AddUser(ctx *gin.Context, req *v1.AddUserRequest) (uint64,
 	return u.ID, nil
 }
 
-func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error) {
+func (s *userService) ListUserByPage(ctx context.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error) {
 	current := req.Current
 	size := req.PageSize
 	users, total, err := s.userRepo.GetUser(ctx, req)
@@ -176,7 +215,7 @@ func (s *userService) ListUserByPage(ctx *gin.Context, req *v1.UserQueryRequest)
 }
 
 // GetLoginUser 获取当前登录用户
-func (s *userService) GetLoginUser(ctx *gin.Context) error {
+func (s *userService) GetLoginUser(ctx context.Context) error {
 	// 判断是否已登录
 	return nil
 }
@@ -209,6 +248,7 @@ func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) err
 
 	user = &model.User{
 		UserAccount:  req.UserAccount,
+		UserName:     &req.UserAccount,
 		UserPassword: string(hashedPassword),
 	}
 	// Transaction demo
