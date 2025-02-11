@@ -21,6 +21,7 @@ import (
 var repositorySet = wire.NewSet(
 	repository.NewDB,
 	repository.NewRedis,
+	repository.NewElasticsearch,
 	repository.NewRepository,
 	repository.NewTransaction,
 	repository.NewUserRepository,
@@ -48,6 +49,7 @@ var handlerSet = wire.NewSet(
 var jobSet = wire.NewSet(
 	job.NewJob,
 	job.NewUserJob,
+	job.NewQuestionJob,
 )
 var serverSet = wire.NewSet(
 	server.NewHTTPServer,

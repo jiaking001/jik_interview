@@ -5,6 +5,7 @@ import (
 	"app/internal/model"
 	"context"
 	"errors"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ type UserRepository interface {
 	DeleteById(ctx context.Context, user *model.User, id uint64) error
 	GetCount(ctx context.Context) (int, error)
 	AddUserSignIn(ctx context.Context, key string, offset int64) error
-	GetUserSignIn(ctx context.Context, key string) ([]int64, error)
+	GetUserSignIn(ctx context.Context, key string) ([]byte, error)
 }
 
 func NewUserRepository(
@@ -32,16 +33,15 @@ type userRepository struct {
 	*Repository
 }
 
-func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]int64, error) {
-	segments := []any{
-		"GET", "i64", "0",
-		"GET", "i64", "64",
-		"GET", "i64", "128",
-		"GET", "i64", "192",
-		"GET", "i64", "256",
-		"GET", "i64", "320",
+func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]byte, error) {
+	bytes, err := r.rdb.Get(ctx, key).Bytes()
+	if errors.Is(err, redis.Nil) {
+		return nil, nil
 	}
-	return r.rdb.BitField(ctx, key, segments...).Result()
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
 
 func (r *userRepository) AddUserSignIn(ctx context.Context, key string, offset int64) error {

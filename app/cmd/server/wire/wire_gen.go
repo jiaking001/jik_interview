@@ -28,7 +28,8 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	handlerHandler := handler.NewHandler(logger)
 	db := repository.NewDB(viperViper, logger)
 	client := repository.NewRedis(viperViper)
-	repositoryRepository := repository.NewRepository(logger, db, client)
+	elasticsearchClient := repository.NewElasticsearch(viperViper)
+	repositoryRepository := repository.NewRepository(logger, db, client, elasticsearchClient)
 	transaction := repository.NewTransaction(repositoryRepository)
 	sidSid := sid.NewSid()
 	serviceService := service.NewService(transaction, logger, sidSid, jwtJWT)
@@ -47,7 +48,8 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler, questionHandler, questionBankHandler, questionBankQuestionHandler)
 	jobJob := job.NewJob(transaction, logger, sidSid)
 	userJob := job.NewUserJob(jobJob, userRepository)
-	jobServer := server.NewJobServer(logger, userJob)
+	questionJob := job.NewQuestionJob(jobJob, questionRepository)
+	jobServer := server.NewJobServer(logger, userJob, questionJob)
 	appApp := newApp(httpServer, jobServer)
 	return appApp, func() {
 	}, nil
@@ -55,13 +57,13 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 
 // wire.go:
 
-var repositorySet = wire.NewSet(repository.NewDB, repository.NewRedis, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository, repository.NewQuestionBankQuestionRepository)
+var repositorySet = wire.NewSet(repository.NewDB, repository.NewRedis, repository.NewElasticsearch, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository, repository.NewQuestionBankQuestionRepository)
 
 var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewQuestionBankService, service.NewQuestionService, service.NewQuestionBankQuestionService)
 
 var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewQuestionBankHandler, handler.NewQuestionHandler, handler.NewQuestionBankQuestionHandler)
 
-var jobSet = wire.NewSet(job.NewJob, job.NewUserJob)
+var jobSet = wire.NewSet(job.NewJob, job.NewUserJob, job.NewQuestionJob)
 
 var serverSet = wire.NewSet(server.NewHTTPServer, server.NewJobServer)
 

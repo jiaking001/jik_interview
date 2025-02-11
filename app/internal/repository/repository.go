@@ -5,6 +5,7 @@ import (
 	"app/pkg/zapgorm2"
 	"context"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/glebarez/sqlite"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -19,6 +20,7 @@ const ctxTxKey = "TxKey"
 type Repository struct {
 	db     *gorm.DB
 	rdb    *redis.Client
+	es     *elasticsearch.Client
 	logger *log.Logger
 }
 
@@ -26,10 +28,12 @@ func NewRepository(
 	logger *log.Logger,
 	db *gorm.DB,
 	rdb *redis.Client,
+	es *elasticsearch.Client,
 ) *Repository {
 	return &Repository{
 		db:     db,
 		rdb:    rdb,
+		es:     es,
 		logger: logger,
 	}
 }
@@ -118,4 +122,14 @@ func NewRedis(conf *viper.Viper) *redis.Client {
 	}
 
 	return rdb
+}
+func NewElasticsearch(conf *viper.Viper) *elasticsearch.Client {
+	es, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{"http://localhost:9200"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return es
 }

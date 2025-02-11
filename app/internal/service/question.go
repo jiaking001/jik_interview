@@ -18,6 +18,7 @@ type QuestionService interface {
 	ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error)
 	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
 	ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
+	SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
 }
 
 func NewQuestionService(
@@ -33,6 +34,54 @@ func NewQuestionService(
 type questionService struct {
 	*Service
 	questionRepository repository.QuestionRepository
+}
+
+func (s *questionService) SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {
+	current := req.Current
+	size := req.PageSize
+	questions, total, err := s.questionRepository.GetEsQuestion(ctx, req)
+	if err != nil {
+		return v1.PageQuestionVO{}, err
+	}
+	var questionVOList []v1.QuestionVO
+
+	for _, question := range questions {
+		//var id, userId string
+		//userId = *question.UserID
+		//
+		//// 原始的 JSON 格式的字符串
+		//jsonStr := question.Tags
+		//
+		//// 定义一个字符串数组变量来存储解析后的结果
+		//var tagList []string
+		//
+		//// 使用 json.Unmarshal 解析 JSON 字符串
+		//err = json.Unmarshal([]byte(*jsonStr), &tagList)
+		//if err != nil {
+		//	return v1.PageQuestionVO{}, err
+		//}
+
+		q := v1.QuestionVO{
+			Answer:     question.Answer,
+			Content:    question.Content,
+			CreateTime: question.CreateTime,
+			ID:         nil,
+			TagList:    nil,
+			Title:      question.Title,
+			UpdateTime: question.UpdateTime,
+			UserID:     nil,
+		}
+		questionVOList = append(questionVOList, q)
+	}
+	pages := total / *size + 1
+	return v1.PageQuestionVO{
+		Records: questionVOList,
+		Total:   &total,
+		Pages:   &pages,
+		Size:    size,
+		Current: current,
+	}, nil
+
 }
 
 func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {

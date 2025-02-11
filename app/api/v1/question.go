@@ -92,3 +92,14 @@ type PageQuestionVO struct {
 	Size             *int         `json:"size,omitempty"`             // 每页大小
 	Total            *int         `json:"total,omitempty"`            // 总记录数
 }
+
+type SearchResult struct {
+	Hits struct {
+		Total struct {
+			Value int64 `json:"value"`
+		} `json:"total"`
+		Hits []struct {
+			Source Question `json:"_source"`
+		} `json:"hits"`
+	} `json:"hits"`
+}

@@ -3,12 +3,20 @@ package repository
 import (
 	v1 "app/api/v1"
 	"app/internal/model"
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"gorm.io/gorm"
+	"strconv"
+	"time"
 )
 
 type QuestionRepository interface {
+	AddDataToEs(ctx context.Context, data []model.QuestionEs) error
+	GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error)
 	GetQuestion(ctx context.Context, req *v1.QuestionRequest) ([]model.Question, int, error)
 	GetCount(ctx context.Context) (int, error)
 	Create(ctx context.Context, question *model.Question) error
@@ -17,6 +25,7 @@ type QuestionRepository interface {
 	DeleteById(ctx context.Context, question *model.Question, id uint64) error
 	Update(ctx context.Context, question *model.Question) error
 	GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error)
+	GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error)
 }
 
 func NewQuestionRepository(
@@ -29,6 +38,98 @@ func NewQuestionRepository(
 
 type questionRepository struct {
 	*Repository
+}
+
+func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error) {
+	var buf bytes.Buffer
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					{"match": map[string]interface{}{"title": req.SearchText}},
+					{"match": map[string]interface{}{"content": req.SearchText}},
+					{"match": map[string]interface{}{"answer": req.SearchText}},
+				},
+			},
+		},
+	}
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		return nil, 0, err
+	}
+	res, err := r.es.Search(
+		r.es.Search.WithContext(ctx),
+		r.es.Search.WithIndex("question"),
+		r.es.Search.WithBody(&buf),
+		r.es.Search.WithTrackTotalHits(true),
+		r.es.Search.WithPretty(),
+	)
+	if err != nil || res.IsError() {
+		return nil, 0, err
+	}
+	var rr map[string]interface{}
+	if err = json.NewDecoder(res.Body).Decode(&rr); err != nil {
+		return nil, 0, err
+	}
+	var total int
+	var questions []v1.Question
+	for _, hit := range rr["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		if _, v := hit.(map[string]interface{})["_source"]; v {
+			body, err := json.Marshal(hit.(map[string]interface{})["_source"])
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			var q model.QuestionEs
+			if err := json.Unmarshal(body, &q); err != nil {
+				fmt.Println(err)
+				continue
+			}
+			questions = append(questions, v1.Question{
+				Answer:     &q.Answer,
+				Content:    &q.Content,
+				CreateTime: &q.CreateTime,
+				EditTime:   &q.EditTime,
+				ID:         nil,
+				IsDelete:   &q.IsDelete,
+				Tags:       nil,
+				Title:      &q.Title,
+				UpdateTime: &q.UpdateTime,
+				UserID:     nil,
+			})
+			total += 1
+		}
+	}
+	return questions, total, nil
+}
+
+func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.QuestionEs) error {
+	for _, question := range data {
+		body := map[string]interface{}{
+			"doc":           question,
+			"doc_as_upsert": true, // 设置 upsert 行为
+		}
+		marshal, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+		req := esapi.UpdateRequest{
+			Index:      "question",
+			DocumentID: strconv.FormatInt(question.Id, 10),
+			Body:       bytes.NewReader(marshal),
+		}
+		if _, err = req.Do(ctx, r.es); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error) {
+	var questions []model.Question
+	if err := r.DB(ctx).Unscoped().Find(&questions).Error; err != nil {
+		return nil, err
+	}
+	return questions, nil
 }
 
 func (r *questionRepository) GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error) {
