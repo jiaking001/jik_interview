@@ -46,7 +46,7 @@ type QuestionEs struct {
 	Id         int64     `json:"id"`
 	Title      string    `json:"title"`
 	Content    string    `json:"content"`
-	Tags       []string  `json:"tags"`
+	Tags       string    `json:"tags"`
 	Answer     string    `json:"answer"`
 	UserId     int64     `json:"user_id"`
 	EditTime   time.Time `json:"edit_time"`

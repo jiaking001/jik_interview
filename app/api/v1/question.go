@@ -27,7 +27,7 @@ type QuestionRequest struct {
 	SearchText     *string  `json:"searchText,omitempty"`     // 搜索文本
 	SortField      *string  `json:"sortField,omitempty"`      // 排序字段
 	SortOrder      *string  `json:"sortOrder,omitempty"`      // 排序顺序
-	Tags           []string `json:"tags,omitempty"`           // 标签列表
+	Tags           []string `json:"tag,omitempty"`            // 标签列表
 	Title          *string  `json:"title,omitempty"`          // 问题标题
 	UserID         *string  `json:"userId,omitempty"`         // 用户 ID
 }

@@ -4,7 +4,6 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"context"
-	"encoding/json"
 	"time"
 )
 
@@ -54,21 +53,11 @@ func syncDataToElasticsearch(ctx context.Context, t questionJob) error {
 
 	var data []model.QuestionEs
 	for _, q := range question {
-		jsonStr := q.Tags
-
-		// 定义一个字符串数组变量来存储解析后的结果
-		var tagList []string
-
-		// 使用 json.Unmarshal 解析 JSON 字符串
-		err = json.Unmarshal([]byte(*jsonStr), &tagList)
-		if err != nil {
-			return err
-		}
 		es := model.QuestionEs{
 			Id:         int64(q.ID),
 			Title:      *q.Title,
 			Content:    *q.Content,
-			Tags:       tagList,
+			Tags:       *q.Tags,
 			Answer:     *q.Answer,
 			UserId:     int64(q.UserID),
 			EditTime:   q.EditTime,

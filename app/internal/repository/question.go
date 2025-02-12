@@ -3,6 +3,7 @@ package repository
 import (
 	v1 "app/api/v1"
 	"app/internal/model"
+	"app/pkg/utils"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -11,7 +12,6 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"gorm.io/gorm"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -52,7 +52,7 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 				"should": []map[string]interface{}{},
 				// 过滤条件
 				"filter": []map[string]interface{}{
-					{"match": map[string]interface{}{"is_delete": "0"}},
+					{"term": map[string]interface{}{"is_delete": "0"}},
 				},
 			},
 		},
@@ -99,8 +99,50 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 			},
 		)
 	}
+	if req.Tags != nil && len(req.Tags) > 0 {
+		for _, tag := range req.Tags {
+			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+				query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]map[string]interface{}),
+				map[string]interface{}{
+					"term": map[string]interface{}{"tags": tag},
+				},
+			)
+		}
+	}
+	if req.ID != nil && *req.ID != "" {
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]map[string]interface{}),
+			map[string]interface{}{
+				"term": map[string]interface{}{"id": *req.ID},
+			},
+		)
+	}
+	if req.UserID != nil && *req.UserID != "" {
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]map[string]interface{}),
+			map[string]interface{}{
+				"term": map[string]interface{}{"user_id": *req.UserID},
+			},
+		)
+	}
+	if req.QuestionBankID != nil && *req.QuestionBankID != "" {
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = append(
+			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]map[string]interface{}),
+			map[string]interface{}{
+				"term": map[string]interface{}{"question_id": *req.QuestionBankID},
+			},
+		)
+	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		return nil, 0, err
+	}
+	var size, current int
+	size = 12   // 默认值
+	current = 1 // 默认值
+	// 分页字段
+	if req.PageSize != nil && req.Current != nil {
+		size = *req.PageSize
+		current = *req.Current
 	}
 	res, err := r.es.Search(
 		r.es.Search.WithContext(ctx),
@@ -108,9 +150,9 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 		r.es.Search.WithBody(&buf),
 		r.es.Search.WithTrackTotalHits(true),
 		r.es.Search.WithPretty(),
+		r.es.Search.WithSize(size),
 		// 分页字段
-		r.es.Search.WithFrom(*req.PageSize*(*req.Current-1)),
-		r.es.Search.WithSize(*req.PageSize),
+		r.es.Search.WithFrom(size*(current-1)),
 	)
 	if err != nil || res.IsError() {
 		return nil, 0, err
@@ -135,16 +177,8 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 				continue
 			}
 
-			// 将字符串数组转化为字符串
-			quotedTags := make([]string, len(q.Tags))
-			for i, tag := range q.Tags {
-				quotedTags[i] = strconv.Quote(tag) // 使用 strconv.Quote 添加双引号
-			}
-			tags := strings.Join(quotedTags, ",")
-			tags = "[" + tags + "]"
-
-			id := strconv.FormatInt(q.Id, 10)
-			userId := strconv.FormatInt(q.UserId, 10)
+			id := utils.Int64TOString(q.Id)
+			userId := utils.Int64TOString(q.UserId)
 			questions = append(questions, v1.Question{
 				Answer:     &q.Answer,
 				Content:    &q.Content,
@@ -152,7 +186,7 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 				EditTime:   &q.EditTime,
 				ID:         &id,
 				IsDelete:   &q.IsDelete,
-				Tags:       &tags,
+				Tags:       &q.Tags,
 				Title:      &q.Title,
 				UpdateTime: &q.UpdateTime,
 				UserID:     &userId,
@@ -186,7 +220,7 @@ func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.Quest
 
 func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error) {
 	var questions []model.Question
-	if err := r.DB(ctx).Unscoped().Where("update_time >= ?", true).Find(&questions).Error; err != nil {
+	if err := r.DB(ctx).Unscoped().Find(&questions).Error; err != nil {
 		return nil, err
 	}
 	return questions, nil
@@ -286,18 +320,20 @@ func (r *questionRepository) GetQuestion(ctx context.Context, req *v1.QuestionRe
 	}
 	if req.QuestionBankID != nil {
 		questionBankID = *req.QuestionBankID
+		// TODO 未实现根据题库id查询
+		_ = questionBankID
 	}
 	// TODO 未实现根据标签查询
-	if err := r.DB(ctx).Joins("INNER JOIN question_bank_question "+
+	if err := r.DB(ctx).Joins("LEFT JOIN question_bank_question "+
 		"ON question.id = question_bank_question.question_id").Where(""+
 		"question.id LIKE ? AND "+
 		"question.title LIKE ? AND "+
-		"question.user_id LIKE ? AND "+
-		"question_bank_question.question_bank_id LIKE ?",
+		"question.user_id LIKE ?",
+		//"AND question_bank_question.question_bank_id LIKE ?",
 		"%"+id+"%",
 		"%"+title+"%",
 		"%"+userId+"%",
-		"%"+questionBankID+"%",
+		//"%"+questionBankID+"%",
 	).Order(s).Distinct().Find(&questions).Group("question.id").Count(&total).Error; err != nil {
 		return nil, 0, v1.ErrNotFound
 	}
