@@ -4,10 +4,9 @@ import (
 	v1 "app/api/v1"
 	"app/internal/model"
 	"app/internal/repository"
+	"app/pkg/utils"
 	"context"
-	"encoding/json"
 	"strconv"
-	"strings"
 )
 
 type QuestionService interface {
@@ -46,30 +45,24 @@ func (s *questionService) SearchQuestionVoByPage(ctx context.Context, req *v1.Qu
 	var questionVOList []v1.QuestionVO
 
 	for _, question := range questions {
-		//var id, userId string
-		//userId = *question.UserID
-		//
-		//// 原始的 JSON 格式的字符串
-		//jsonStr := question.Tags
-		//
-		//// 定义一个字符串数组变量来存储解析后的结果
-		//var tagList []string
-		//
-		//// 使用 json.Unmarshal 解析 JSON 字符串
-		//err = json.Unmarshal([]byte(*jsonStr), &tagList)
-		//if err != nil {
-		//	return v1.PageQuestionVO{}, err
-		//}
+		var id, userId string
+		id = *question.ID
+		userId = *question.UserID
+		// 字符串转字符串数组
+		tagList, err := utils.StringToStrings(*question.Tags)
+		if err != nil {
+			return v1.PageQuestionVO{}, err
+		}
 
 		q := v1.QuestionVO{
 			Answer:     question.Answer,
 			Content:    question.Content,
 			CreateTime: question.CreateTime,
-			ID:         nil,
-			TagList:    nil,
+			ID:         &id,
+			TagList:    tagList,
 			Title:      question.Title,
 			UpdateTime: question.UpdateTime,
-			UserID:     nil,
+			UserID:     &userId,
 		}
 		questionVOList = append(questionVOList, q)
 	}
@@ -95,17 +88,11 @@ func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.Ques
 
 	for _, question := range questions {
 		var id, userId string
-		id = strconv.Itoa(int(question.ID))
-		userId = strconv.Itoa(int(question.UserID))
+		// uint64转string
+		id = utils.Uint64TOString(question.ID)
+		userId = utils.Uint64TOString(question.UserID)
 
-		// 原始的 JSON 格式的字符串
-		jsonStr := question.Tags
-
-		// 定义一个字符串数组变量来存储解析后的结果
-		var tagList []string
-
-		// 使用 json.Unmarshal 解析 JSON 字符串
-		err = json.Unmarshal([]byte(*jsonStr), &tagList)
+		tagList, err := utils.StringToStrings(*question.Tags)
 		if err != nil {
 			return v1.PageQuestionVO{}, err
 		}
@@ -146,14 +133,7 @@ func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuesti
 		return v1.QuestionVO{}, err
 	}
 
-	// 原始的 JSON 格式的字符串
-	jsonStr := question.Tags
-
-	// 定义一个字符串数组变量来存储解析后的结果
-	var tagList []string
-
-	// 使用 json.Unmarshal 解析 JSON 字符串
-	err = json.Unmarshal([]byte(*jsonStr), &tagList)
+	tagList, err := utils.StringToStrings(*question.Tags)
 	if err != nil {
 		return v1.QuestionVO{}, err
 	}
@@ -183,14 +163,7 @@ func (s *questionService) ListQuestionByBankId(ctx context.Context, bankId uint6
 		id = strconv.Itoa(int(question.ID))
 		userId = strconv.Itoa(int(question.UserID))
 
-		// 原始的 JSON 格式的字符串
-		jsonStr := question.Tags
-
-		// 定义一个字符串数组变量来存储解析后的结果
-		var tagList []string
-
-		// 使用 json.Unmarshal 解析 JSON 字符串
-		err = json.Unmarshal([]byte(*jsonStr), &tagList)
+		tagList, err := utils.StringToStrings(*question.Tags)
 		if err != nil {
 			return v1.PageQuestionVO{}, err
 		}
@@ -219,7 +192,7 @@ func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQues
 		return false, v1.ParamsError
 	}
 
-	id, err := strconv.ParseUint(*req.ID, 10, 64)
+	id, err := utils.StringToUint64(*req.ID)
 	if err != nil {
 		return false, v1.ParamsError
 	}
@@ -236,13 +209,7 @@ func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQues
 
 	if req.Tags != nil {
 		// 将字符串数组转化为字符串
-		quotedTags := make([]string, len(req.Tags))
-		for i, tag := range req.Tags {
-			quotedTags[i] = strconv.Quote(tag) // 使用 strconv.Quote 添加双引号
-		}
-		tags := strings.Join(quotedTags, ",")
-		tags = "[" + tags + "]"
-
+		tags := utils.StringsToString(req.Tags)
 		question.Tags = &tags
 	}
 
@@ -262,7 +229,7 @@ func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQues
 	if req.Id <= "0" {
 		return false, v1.ParamsError
 	}
-	id, err := strconv.ParseUint(req.Id, 10, 64)
+	id, err := utils.StringToUint64(req.Id)
 	if err != nil {
 		return false, v1.ParamsError
 	}
@@ -295,12 +262,7 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 	}
 
 	// 将字符串数组转化为字符串
-	quotedTags := make([]string, len(req.Tags))
-	for i, tag := range req.Tags {
-		quotedTags[i] = strconv.Quote(tag) // 使用 strconv.Quote 添加双引号
-	}
-	tags := strings.Join(quotedTags, ",")
-	tags = "[" + tags + "]"
+	tags := utils.StringsToString(req.Tags)
 
 	questionBank = &model.Question{
 		Answer:  req.Answer,
@@ -331,8 +293,8 @@ func (s *questionService) ListQuestionByPage(ctx context.Context, req *v1.Questi
 	var questionList []v1.Question
 	for _, question := range questions {
 		var id, userId string
-		id = strconv.Itoa(int(question.ID))
-		userId = strconv.Itoa(int(question.UserID))
+		id = utils.Uint64TOString(question.ID)
+		userId = utils.Uint64TOString(question.UserID)
 		q := v1.Question{
 			Answer:     question.Answer,
 			Content:    question.Content,

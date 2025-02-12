@@ -11,6 +11,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,15 +44,60 @@ type questionRepository struct {
 func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error) {
 	var buf bytes.Buffer
 	query := map[string]interface{}{
+		// 排序字段
+		"sort": []map[string]interface{}{},
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
-				"should": []map[string]interface{}{
-					{"match": map[string]interface{}{"title": req.SearchText}},
-					{"match": map[string]interface{}{"content": req.SearchText}},
-					{"match": map[string]interface{}{"answer": req.SearchText}},
+				// 匹配条件,满足其中之一即可
+				"should": []map[string]interface{}{},
+				// 过滤条件
+				"filter": []map[string]interface{}{
+					{"match": map[string]interface{}{"is_delete": "0"}},
 				},
 			},
 		},
+	}
+	if req.SortOrder != nil && req.SortField != nil {
+		if *req.SortField == "createTime" {
+			if *req.SortOrder == "ascend" {
+				query["sort"] = append(query["sort"].([]map[string]interface{}),
+					map[string]interface{}{"create_time": map[string]interface{}{
+						"order": "asc",
+					}})
+			} else {
+				query["sort"] = append(query["sort"].([]map[string]interface{}),
+					map[string]interface{}{"create_time": map[string]interface{}{
+						"order": "desc",
+					}})
+			}
+		} else {
+			if *req.SortOrder == "ascend" {
+				query["sort"] = append(query["sort"].([]map[string]interface{}),
+					map[string]interface{}{"update_time": map[string]interface{}{
+						"order": "asc",
+					}})
+			} else {
+				query["sort"] = append(query["sort"].([]map[string]interface{}),
+					map[string]interface{}{"update_time": map[string]interface{}{
+						"order": "desc",
+					}})
+			}
+		}
+	}
+	if req.SearchText != nil && *req.SearchText != "" {
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["minimum_should_match"] = 1
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"] = append(
+			query["query"].(map[string]interface{})["bool"].(map[string]interface{})["should"].([]map[string]interface{}),
+			map[string]interface{}{
+				"match": map[string]interface{}{"title": req.SearchText},
+			},
+			map[string]interface{}{
+				"match": map[string]interface{}{"content": req.SearchText},
+			},
+			map[string]interface{}{
+				"match": map[string]interface{}{"answer": req.SearchText},
+			},
+		)
 	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		return nil, 0, err
@@ -62,6 +108,9 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 		r.es.Search.WithBody(&buf),
 		r.es.Search.WithTrackTotalHits(true),
 		r.es.Search.WithPretty(),
+		// 分页字段
+		r.es.Search.WithFrom(*req.PageSize*(*req.Current-1)),
+		r.es.Search.WithSize(*req.PageSize),
 	)
 	if err != nil || res.IsError() {
 		return nil, 0, err
@@ -72,6 +121,7 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 	}
 	var total int
 	var questions []v1.Question
+	total = int(rr["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
 	for _, hit := range rr["hits"].(map[string]interface{})["hits"].([]interface{}) {
 		if _, v := hit.(map[string]interface{})["_source"]; v {
 			body, err := json.Marshal(hit.(map[string]interface{})["_source"])
@@ -84,19 +134,29 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 				fmt.Println(err)
 				continue
 			}
+
+			// 将字符串数组转化为字符串
+			quotedTags := make([]string, len(q.Tags))
+			for i, tag := range q.Tags {
+				quotedTags[i] = strconv.Quote(tag) // 使用 strconv.Quote 添加双引号
+			}
+			tags := strings.Join(quotedTags, ",")
+			tags = "[" + tags + "]"
+
+			id := strconv.FormatInt(q.Id, 10)
+			userId := strconv.FormatInt(q.UserId, 10)
 			questions = append(questions, v1.Question{
 				Answer:     &q.Answer,
 				Content:    &q.Content,
 				CreateTime: &q.CreateTime,
 				EditTime:   &q.EditTime,
-				ID:         nil,
+				ID:         &id,
 				IsDelete:   &q.IsDelete,
-				Tags:       nil,
+				Tags:       &tags,
 				Title:      &q.Title,
 				UpdateTime: &q.UpdateTime,
-				UserID:     nil,
+				UserID:     &userId,
 			})
-			total += 1
 		}
 	}
 	return questions, total, nil
@@ -126,7 +186,7 @@ func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.Quest
 
 func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error) {
 	var questions []model.Question
-	if err := r.DB(ctx).Unscoped().Find(&questions).Error; err != nil {
+	if err := r.DB(ctx).Unscoped().Where("update_time >= ?", true).Find(&questions).Error; err != nil {
 		return nil, err
 	}
 	return questions, nil

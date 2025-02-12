@@ -71,9 +71,9 @@ export default function BasicLayout({children}: Props) {
                     pathname,
                 }}
                 avatarProps={{
-                    src: loginUser.userAvatar || "/assets/logo.png",
+                    src: loginUser.userAvatar || "/assets/notLoginUser.png",
                     size: 'small',
-                    title: loginUser.userName || "jiaking",
+                    title: loginUser.userName || "未登录",
                     render: (props, dom) => {
                         if (!loginUser.id) {
                             return (

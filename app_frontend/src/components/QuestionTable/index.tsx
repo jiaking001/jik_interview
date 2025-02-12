@@ -41,9 +41,16 @@ const QuestionTable: React.FC = (props: Props) => {
             title: "标题",
             dataIndex: "title",
             valueType: "text",
+            hideInSearch: true,
             render: (_, record) => {
                 return <Link href={`/question/${record.id}`}>{record.title}</Link>;
             },
+        },
+        {
+            title: "搜索",
+            dataIndex: "searchText",
+            valueType: "text",
+            hideInTable: true,
         },
         {
             title: "标签",
@@ -91,7 +98,7 @@ const QuestionTable: React.FC = (props: Props) => {
                     const sortField = Object.keys(sort)?.[0] || "createTime";
                     const sortOrder = sort?.[sortField] || "descend";
 
-                    const {data, code} = await listQuestionVoByPageUsingPost({
+                    const {data, code} = await searchQuestionVoByPageUsingPost({
                         ...params,
                         sortField,
                         sortOrder,

@@ -4,6 +4,7 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"context"
+	"encoding/json"
 	"time"
 )
 
@@ -28,20 +29,19 @@ type questionJob struct {
 
 func (t questionJob) DataToElasticsearch(ctx context.Context) error {
 	// 每过一分钟执行一次
-	//ticker := time.NewTicker(1 * time.Minute)
-	//defer ticker.Stop()
-	//
-	//for {
-	//	select {
-	//	case <-ticker.C:
-	err := syncDataToElasticsearch(ctx, t)
-	if err != nil {
-		t.logger.Info("Failed to sync data: %v")
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			err := syncDataToElasticsearch(ctx, t)
+			if err != nil {
+				t.logger.Error("Failed to sync data: %v")
+			}
+			t.logger.Info("Synced data to elasticsearch")
+		}
 	}
-	t.logger.Info("Synced data to elasticsearch")
-	//}
-	//}
-	return nil
 }
 
 func syncDataToElasticsearch(ctx context.Context, t questionJob) error {
@@ -50,13 +50,25 @@ func syncDataToElasticsearch(ctx context.Context, t questionJob) error {
 	if err != nil {
 		return err
 	}
+	// 原始的 JSON 格式的字符串
+
 	var data []model.QuestionEs
 	for _, q := range question {
+		jsonStr := q.Tags
+
+		// 定义一个字符串数组变量来存储解析后的结果
+		var tagList []string
+
+		// 使用 json.Unmarshal 解析 JSON 字符串
+		err = json.Unmarshal([]byte(*jsonStr), &tagList)
+		if err != nil {
+			return err
+		}
 		es := model.QuestionEs{
 			Id:         int64(q.ID),
 			Title:      *q.Title,
 			Content:    *q.Content,
-			Tags:       nil,
+			Tags:       tagList,
 			Answer:     *q.Answer,
 			UserId:     int64(q.UserID),
 			EditTime:   q.EditTime,
