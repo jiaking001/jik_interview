@@ -38,9 +38,23 @@ func (r *questionBankRepository) Update(ctx context.Context, bank *model.Questio
 }
 
 func (r *questionBankRepository) DeleteById(ctx context.Context, bank *model.QuestionBank, id uint64) error {
+	tx := r.DB(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	if err := r.DB(ctx).Where("id = ?", id).Delete(&bank).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
+	if err := r.DB(ctx).Where("question_bank_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
 
@@ -111,6 +125,7 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 	if req.Description != nil {
 		description = *req.Description
 	}
+	// TODO 当有字段为null时查询不到
 	if err := r.DB(ctx).Where("id LIKE ? AND title LIKE ? AND description LIKE ?",
 		"%"+id+"%",
 		"%"+title+"%",

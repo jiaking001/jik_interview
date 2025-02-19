@@ -27,6 +27,7 @@ type QuestionRepository interface {
 	Update(ctx context.Context, question *model.Question) error
 	GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error)
 	GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error)
+	DeleteBatchQuestion(ctx context.Context, questions []string) error
 }
 
 func NewQuestionRepository(
@@ -39,6 +40,32 @@ func NewQuestionRepository(
 
 type questionRepository struct {
 	*Repository
+}
+
+func (r *questionRepository) DeleteBatchQuestion(ctx context.Context, questions []string) error {
+	tx := r.DB(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 每次删除1000条
+	for i := 0; i < len(questions); i += 1000 {
+		for j := i; j < i+1000 && j < len(questions); j++ {
+			if err := r.DB(ctx).Where("id = ?", questions[j]).Delete(&model.Question{}).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+			if err := r.DB(ctx).Where("question_id = ?", questions[j]).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	tx.Commit()
+	return nil
 }
 
 func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error) {
@@ -245,9 +272,23 @@ func (r *questionRepository) Update(ctx context.Context, question *model.Questio
 }
 
 func (r *questionRepository) DeleteById(ctx context.Context, question *model.Question, id uint64) error {
+	tx := r.DB(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	if err := r.DB(ctx).Where("id = ?", id).Delete(&question).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
+	if err := r.DB(ctx).Where("question_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
 

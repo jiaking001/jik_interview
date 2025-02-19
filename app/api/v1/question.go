@@ -103,3 +103,8 @@ type SearchResult struct {
 		} `json:"hits"`
 	} `json:"hits"`
 }
+
+// BatchDeleteQuestionRequest 批量删除题目
+type BatchDeleteQuestionRequest struct {
+	QuestionIdList []string `json:"questionIdList,omitempty"`
+}

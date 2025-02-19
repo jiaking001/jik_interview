@@ -18,6 +18,7 @@ type QuestionService interface {
 	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
 	ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
 	SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
+	DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error)
 }
 
 func NewQuestionService(
@@ -33,6 +34,18 @@ func NewQuestionService(
 type questionService struct {
 	*Service
 	questionRepository repository.QuestionRepository
+}
+
+func (s *questionService) DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error) {
+	// 检验参数的合法性
+	if len(req.QuestionIdList) == 0 {
+		return false, v1.ParamsError
+	}
+	err := s.questionRepository.DeleteBatchQuestion(ctx, req.QuestionIdList)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *questionService) SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {

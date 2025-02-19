@@ -87,6 +87,7 @@ func NewHTTPServer(
 			question.POST("/update", questionHandler.UpdateQuestion)
 			question.GET("/get/vo", questionHandler.GetQuestion)
 			question.POST("/search/page/vo", questionHandler.SearchPageVo)
+			question.POST("/delete/batch", questionHandler.DeleteBatchQuestion)
 
 			// 题目题库模块
 			questionBankQuestion := noAuthRouter.Group("/questionBankQuestion")

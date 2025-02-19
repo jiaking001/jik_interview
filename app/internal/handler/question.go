@@ -149,3 +149,19 @@ func (h *QuestionHandler) SearchPageVo(ctx *gin.Context) {
 
 	v1.HandleSuccess(ctx, question)
 }
+
+func (h *QuestionHandler) DeleteBatchQuestion(ctx *gin.Context) {
+	var req v1.BatchDeleteQuestionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.questionService.DeleteBatchQuestion(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, ok)
+}
