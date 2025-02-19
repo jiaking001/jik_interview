@@ -11,6 +11,7 @@ type QuestionBankQuestionRepository interface {
 	GetQuestionBankQuestionId(ctx context.Context, id uint64, id2 uint64) (uint64, error)
 	RemoveQuestionBankQuestion(ctx context.Context, id uint64, id2 uint64) (bool, error)
 	BatchAddQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error
+	BatchRemoveQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error
 }
 
 func NewQuestionBankQuestionRepository(
@@ -23,6 +24,28 @@ func NewQuestionBankQuestionRepository(
 
 type questionBankQuestionRepository struct {
 	*Repository
+}
+
+func (r *questionBankQuestionRepository) BatchRemoveQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error {
+	tx := r.DB(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 每次删除1000条
+	for i := 0; i < len(question); i += 1000 {
+		for j := i; j < i+1000 && j < len(question); j++ {
+			if err := r.DB(ctx).Where("question_id = ? AND question_bank_id = ?", question[j].QuestionID, question[j].QuestionBankID).Delete(question).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	tx.Commit()
+	return nil
 }
 
 func (r *questionBankQuestionRepository) BatchAddQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error {

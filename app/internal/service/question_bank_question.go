@@ -14,6 +14,7 @@ type QuestionBankQuestionService interface {
 	AddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (string, error)
 	RemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (bool, error)
 	BatchAddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRequest) (bool, error)
+	BatchRemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRemoveRequest) (bool, error)
 }
 
 func NewQuestionBankQuestionService(
@@ -29,6 +30,33 @@ func NewQuestionBankQuestionService(
 type questionBankQuestionService struct {
 	*Service
 	questionBankQuestionRepository repository.QuestionBankQuestionRepository
+}
+
+func (s *questionBankQuestionService) BatchRemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRemoveRequest) (bool, error) {
+	// 判断参数是否合法
+	if req.QuestionBankID == nil || req.QuestionIDList == nil || len(req.QuestionIDList) == 0 {
+		return false, v1.ParamsError
+	}
+	questionBankID, err := utils.StringToUint64(*req.QuestionBankID)
+	if err != nil {
+		return false, err
+	}
+	// 批量移除题目题库关系
+	var needRemoveQuestion []model.QuestionBankQuestion
+	for _, questionID := range req.QuestionIDList {
+		questionID, err := utils.StringToUint64(questionID)
+		if err != nil {
+			return false, err
+		}
+		needRemoveQuestion = append(needRemoveQuestion, model.QuestionBankQuestion{
+			QuestionBankID: questionBankID,
+			QuestionID:     questionID,
+		})
+	}
+	if err = s.questionBankQuestionRepository.BatchRemoveQuestionBankQuestion(ctx, needRemoveQuestion); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *questionBankQuestionService) BatchAddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRequest) (bool, error) {

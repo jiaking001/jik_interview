@@ -38,16 +38,20 @@ type QuestionBankQuestionVO struct {
 	UserID         *string    `json:"userId,omitempty"`
 }
 
-// 添加移除题目题库关系
-
+// QuestionBankQuestionRequest 添加移除题目题库关系
 type QuestionBankQuestionRequest struct {
 	QuestionBankID *string `json:"questionBankId,omitempty"`
 	QuestionID     *string `json:"questionId,omitempty"`
 }
 
-// 批量添加题目题库关系
-
+// QuestionBankQuestionBatchRequest 批量添加题目题库关系
 type QuestionBankQuestionBatchRequest struct {
+	QuestionBankID *string  `json:"questionBankId,omitempty"`
+	QuestionIDList []string `json:"questionIdList,omitempty"`
+}
+
+// QuestionBankQuestionBatchRemoveRequest 批量移除题目题库关系
+type QuestionBankQuestionBatchRemoveRequest struct {
 	QuestionBankID *string  `json:"questionBankId,omitempty"`
 	QuestionIDList []string `json:"questionIdList,omitempty"`
 }
