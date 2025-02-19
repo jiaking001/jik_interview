@@ -2,7 +2,9 @@ package service
 
 import (
 	v1 "app/api/v1"
+	"app/internal/model"
 	"app/internal/repository"
+	"app/pkg/utils"
 	"context"
 	"strconv"
 )
@@ -11,6 +13,7 @@ type QuestionBankQuestionService interface {
 	ListQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionQueryRequest) (v1.PageQuestionBankQuestionVO, error)
 	AddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (string, error)
 	RemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (bool, error)
+	BatchAddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRequest) (bool, error)
 }
 
 func NewQuestionBankQuestionService(
@@ -26,6 +29,48 @@ func NewQuestionBankQuestionService(
 type questionBankQuestionService struct {
 	*Service
 	questionBankQuestionRepository repository.QuestionBankQuestionRepository
+}
+
+func (s *questionBankQuestionService) BatchAddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRequest) (bool, error) {
+	// 获取题库中已存在的题目
+	var questionExistList = make(map[uint64]bool)
+	if req.QuestionBankID == nil || len(req.QuestionIDList) == 0 {
+		return false, v1.ParamsError
+	}
+	questionBankID, err := utils.StringToUint64(*req.QuestionBankID)
+	if err != nil {
+		return false, err
+	}
+	questions, err := s.questionBankQuestionRepository.GetQuestionBankQuestion(ctx, questionBankID, 1)
+	if err != nil {
+		return false, err
+	}
+	for _, question := range questions {
+		questionExistList[question.QuestionID] = true
+	}
+	// 批量操作每次操作1000条
+	for i := 0; i < len(req.QuestionIDList); i += 1000 {
+		var needAddQuestion []model.QuestionBankQuestion
+		for j := i; j < i+1000 && j < len(req.QuestionIDList); j++ {
+			// 判断题库中是否已存在该题目
+			questionID, err := utils.StringToUint64(req.QuestionIDList[j])
+			if err != nil {
+				return false, err
+			}
+			if _, ok := questionExistList[questionID]; ok {
+				continue
+			}
+			needAddQuestion = append(needAddQuestion, model.QuestionBankQuestion{
+				QuestionBankID: questionBankID,
+				QuestionID:     questionID,
+			})
+		}
+		err = s.questionBankQuestionRepository.BatchAddQuestionBankQuestion(ctx, needAddQuestion)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 func (s *questionBankQuestionService) RemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (bool, error) {

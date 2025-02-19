@@ -224,7 +224,7 @@ const QuestionAdminPage: React.FC = () => {
         rowSelection={{
           // 注释该行则默认不显示下拉选项
           selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
-          defaultSelectedRowKeys: [1],
+          // defaultSelectedRowKeys: [1],
         }}
         tableAlertRender={({
           selectedRowKeys,

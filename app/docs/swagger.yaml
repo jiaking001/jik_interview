@@ -1,58 +1,83 @@
 definitions:
-  app_api_v1.GetProfileResponse:
+  app_api_v1.AddUserRequest:
     properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/app_api_v1.GetProfileResponseData'
-      message:
+      userAccount:
+        type: string
+      userAvatar:
+        type: string
+      userName:
+        type: string
+      userProfile:
+        type: string
+      userRole:
         type: string
     type: object
-  app_api_v1.GetProfileResponseData:
+  app_api_v1.DeleteUserRequest:
     properties:
-      nickname:
-        example: alan
+      id:
         type: string
-      userId:
+    type: object
+  app_api_v1.GetLoginUserResponseData:
+    properties:
+      createTime:
+        type: string
+      id:
+        type: integer
+      updateTime:
+        type: string
+      userAvatar:
+        type: string
+      userName:
+        type: string
+      userProfile:
+        type: string
+      userRole:
         type: string
     type: object
   app_api_v1.LoginRequest:
     properties:
-      email:
-        example: 1234@gmail.com
+      userAccount:
+        example: "123456"
         type: string
-      password:
+      userPassword:
         example: "123456"
         type: string
     required:
-    - email
-    - password
-    type: object
-  app_api_v1.LoginResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/app_api_v1.LoginResponseData'
-      message:
-        type: string
+    - userAccount
+    - userPassword
     type: object
   app_api_v1.LoginResponseData:
     properties:
-      accessToken:
+      createTime:
+        type: string
+      id:
+        type: integer
+      updateTime:
+        type: string
+      userAvatar:
+        type: string
+      userName:
+        type: string
+      userProfile:
+        type: string
+      userRole:
         type: string
     type: object
   app_api_v1.RegisterRequest:
     properties:
-      account:
+      checkPassword:
+        example: "123456"
+        type: string
+      userAccount:
         example: "1234456"
         type: string
-      password:
+      userPassword:
         example: "123456"
         type: string
     required:
-    - account
-    - password
+    - checkPassword
+    - userAccount
+    - userPassword
     type: object
   app_api_v1.Response:
     properties:
@@ -62,16 +87,94 @@ definitions:
       message:
         type: string
     type: object
-  app_api_v1.UpdateProfileRequest:
+  app_api_v1.UpdateUserRequest:
     properties:
-      email:
-        example: 1234@gmail.com
+      id:
         type: string
-      nickname:
-        example: alan
+      userAccount:
         type: string
-    required:
-    - email
+      userAvatar:
+        type: string
+      userName:
+        type: string
+      userProfile:
+        type: string
+      userRole:
+        type: string
+    type: object
+  app_api_v1.User:
+    properties:
+      createTime:
+        type: string
+      editTime:
+        type: string
+      id:
+        type: string
+      isDelete:
+        type: integer
+      mpOpenId:
+        type: string
+      unionId:
+        type: string
+      updateTime:
+        type: string
+      userAccount:
+        type: string
+      userAvatar:
+        type: string
+      userName:
+        type: string
+      userPassword:
+        type: string
+      userProfile:
+        type: string
+      userRole:
+        type: string
+    type: object
+  app_api_v1.UserQueryRequest:
+    properties:
+      current:
+        type: integer
+      id:
+        type: string
+      mpOpenId:
+        type: string
+      pageSize:
+        type: integer
+      sortField:
+        type: string
+      sortOrder:
+        type: string
+      unionId:
+        type: string
+      userAccount:
+        type: string
+      userName:
+        type: string
+      userProfile:
+        type: string
+      userRole:
+        type: string
+    type: object
+  app_api_v1.UserQueryResponseData-app_api_v1_User:
+    properties:
+      current:
+        description: 当前页码
+        type: integer
+      pages:
+        description: 总页数
+        type: integer
+      records:
+        description: 当前页的记录列表
+        items:
+          $ref: '#/definitions/app_api_v1.User'
+        type: array
+      size:
+        description: 每页大小
+        type: integer
+      total:
+        description: 总记录数
+        type: integer
     type: object
 host: localhost:8000
 info:
@@ -87,12 +190,126 @@ info:
   title: Nunu Example API
   version: 1.0.0
 paths:
+  /add:
+    post:
+      consumes:
+      - application/json
+      description: 用于添加新用户
+      parameters:
+      - description: 注册请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app_api_v1.AddUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: 添加用户
+      tags:
+      - 用户模块（管理员）
+  /add/sign_in:
+    post:
+      consumes:
+      - application/json
+      description: 用于用户签到
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: 用户签到
+      tags:
+      - 用户模块（管理员）
+  /delete:
+    post:
+      consumes:
+      - application/json
+      description: 用于删除用户
+      parameters:
+      - description: 注册请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app_api_v1.DeleteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: 删除用户
+      tags:
+      - 用户模块（管理员）
+  /get/login:
+    post:
+      consumes:
+      - application/json
+      description: 用于获取全局用户的登录状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app_api_v1.GetLoginUserResponseData'
+      summary: 获取用户登录状态
+      tags:
+      - 用户模块
+  /get/sign_in:
+    get:
+      consumes:
+      - application/json
+      description: 用于用户查看签到日历
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+      summary: 签到日历
+      tags:
+      - 用户模块（管理员）
+  /list/page:
+    post:
+      consumes:
+      - application/json
+      description: 用于获取所有用户
+      parameters:
+      - description: 注册请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app_api_v1.UserQueryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app_api_v1.UserQueryResponseData-app_api_v1_User'
+      summary: 用户列表
+      tags:
+      - 用户模块（管理员）
   /login:
     post:
       consumes:
       - application/json
+      description: 用于实现用户的登录功能
       parameters:
-      - description: params
+      - description: 注册请求参数
         in: body
         name: request
         required: true
@@ -104,17 +321,32 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/app_api_v1.LoginResponse'
-      summary: 账号登录
+            $ref: '#/definitions/app_api_v1.LoginResponseData'
+      summary: 用户登录
+      tags:
+      - 用户模块
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: 用于实现用户的注销功能
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: 用户注销
       tags:
       - 用户模块
   /register:
     post:
       consumes:
       - application/json
-      description: 目前只支持邮箱登录
+      description: 用于实现用户的注册功能
       parameters:
-      - description: params
+      - description: 注册请求参数
         in: body
         name: request
         required: true
@@ -130,44 +362,28 @@ paths:
       summary: 用户注册
       tags:
       - 用户模块
-  /user:
-    get:
+  /update:
+    post:
       consumes:
       - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/app_api_v1.GetProfileResponse'
-      security:
-      - Bearer: []
-      summary: 获取用户信息
-      tags:
-      - 用户模块
-    put:
-      consumes:
-      - application/json
+      description: 用于修改用户信息
       parameters:
-      - description: params
+      - description: 注册请求参数
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/app_api_v1.UpdateProfileRequest'
+          $ref: '#/definitions/app_api_v1.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/app_api_v1.Response'
-      security:
-      - Bearer: []
-      summary: 修改用户信息
+            type: boolean
+      summary: 修改用户
       tags:
-      - 用户模块
+      - 用户模块（管理员）
 securityDefinitions:
   Bearer:
     in: header

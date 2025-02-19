@@ -69,3 +69,19 @@ func (h *QuestionBankQuestionHandler) RemoveQuestionBankQuestion(ctx *gin.Contex
 
 	v1.HandleSuccess(ctx, ok)
 }
+
+func (h *QuestionBankQuestionHandler) BatchAddQuestionBankQuestion(ctx *gin.Context) {
+	var req v1.QuestionBankQuestionBatchRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.questionBankQuestionService.BatchAddQuestionBankQuestion(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, ok)
+}

@@ -2,6 +2,8 @@ package v1
 
 import "time"
 
+// 根据题库id查找题目
+
 type QuestionBankQuestionQueryRequest struct {
 	Current        *int    `json:"current,omitempty"`
 	ID             *string `json:"id,omitempty"`
@@ -41,4 +43,11 @@ type QuestionBankQuestionVO struct {
 type QuestionBankQuestionRequest struct {
 	QuestionBankID *string `json:"questionBankId,omitempty"`
 	QuestionID     *string `json:"questionId,omitempty"`
+}
+
+// 批量添加题目题库关系
+
+type QuestionBankQuestionBatchRequest struct {
+	QuestionBankID *string  `json:"questionBankId,omitempty"`
+	QuestionIDList []string `json:"questionIdList,omitempty"`
 }

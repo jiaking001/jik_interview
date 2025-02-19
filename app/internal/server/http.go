@@ -87,12 +87,12 @@ func NewHTTPServer(
 			question.POST("/update", questionHandler.UpdateQuestion)
 			question.GET("/get/vo", questionHandler.GetQuestion)
 			question.POST("/search/page/vo", questionHandler.SearchPageVo)
-
 			// 题目题库模块
 			questionBankQuestion := noAuthRouter.Group("/questionBankQuestion")
 			questionBankQuestion.POST("/list/page/vo", questionBankQuestionHandler.GetQuestionBankQuestion)
 			questionBankQuestion.POST("/add", questionBankQuestionHandler.AddQuestionBankQuestion)
-			questionBankQuestion.POST("remove", questionBankQuestionHandler.RemoveQuestionBankQuestion)
+			questionBankQuestion.POST("/remove", questionBankQuestionHandler.RemoveQuestionBankQuestion)
+			questionBankQuestion.POST("/add/batch", questionBankQuestionHandler.BatchAddQuestionBankQuestion)
 		}
 		// Non-strict permission routing group
 		//noStrictAuthRouter := v1.Group("/").Use(middleware.NoStrictAuth(jwt, logger))

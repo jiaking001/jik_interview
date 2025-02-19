@@ -31,12 +31,11 @@ func NewUserHandler(handler *Handler, userService service.UserService) *UserHand
 
 // Register godoc
 // @Summary 用户注册
-// @Schemes
-// @Description 目前只支持邮箱登录
+// @Description 用于实现用户的注册功能
 // @Tags 用户模块
 // @Accept json
 // @Produce json
-// @Param request body v1.RegisterRequest true "params"
+// @Param  request body v1.RegisterRequest true "注册请求参数"
 // @Success 200 {object} v1.Response
 // @Router /register [post]
 func (h *UserHandler) Register(ctx *gin.Context) {
@@ -56,14 +55,13 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 }
 
 // Login godoc
-// @Summary 账号登录
-// @Schemes
-// @Description
+// @Summary 用户登录
+// @Description 用于实现用户的登录功能
 // @Tags 用户模块
 // @Accept json
 // @Produce json
-// @Param request body v1.LoginRequest true "params"
-// @Success 200 {object} v1.LoginResponse
+// @Param request body v1.LoginRequest  true "注册请求参数"
+// @Success 200 {object} v1.LoginResponseData
 // @Router /login [post]
 func (h *UserHandler) Login(ctx *gin.Context) {
 	var req v1.LoginRequest
@@ -96,13 +94,12 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 }
 
 // Logout godoc
-// @Summary 退出登录
-// @Schemes
-// @Description
+// @Summary 用户注销
+// @Description 用于实现用户的注销功能
 // @Tags 用户模块
 // @Accept json
 // @Produce json
-// @Success 200
+// @Success 200 {object} bool
 // @Router /logout [post]
 func (h *UserHandler) Logout(ctx *gin.Context) {
 	session := sessions.Default(ctx)
@@ -117,13 +114,11 @@ func (h *UserHandler) Logout(ctx *gin.Context) {
 
 // GetLoginUser godoc
 // @Summary 获取用户登录状态
-// @Schemes
-// @Description
+// @Description 用于获取全局用户的登录状态
 // @Tags 用户模块
 // @Accept json
 // @Produce json
-// @Param request body v1.GetLoginUserRequest true "params"
-// @Success 200 {object} v1.GetLoginUserResponse
+// @Success 200 {object} v1.GetLoginUserResponseData
 // @Router /get/login [post]
 func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 	session := sessions.Default(ctx)
@@ -148,6 +143,15 @@ func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 	})
 }
 
+// ListPage godoc
+// @Summary 用户列表
+// @Description 用于获取所有用户
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Param  request body v1.UserQueryRequest  true "注册请求参数"
+// @Success 200 {object} v1.UserQueryResponseData[v1.User]
+// @Router /list/page [post]
 func (h *UserHandler) ListPage(ctx *gin.Context) {
 	var req v1.UserQueryRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -170,6 +174,15 @@ func (h *UserHandler) ListPage(ctx *gin.Context) {
 	})
 }
 
+// AddUser godoc
+// @Summary 添加用户
+// @Description 用于添加新用户
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Param  request body v1.AddUserRequest  true "注册请求参数"
+// @Success 200 {object} uint64
+// @Router /add [post]
 func (h *UserHandler) AddUser(ctx *gin.Context) {
 	var req v1.AddUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -185,6 +198,15 @@ func (h *UserHandler) AddUser(ctx *gin.Context) {
 	v1.HandleSuccess(ctx, id)
 }
 
+// DeleteUser godoc
+// @Summary 删除用户
+// @Description 用于删除用户
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Param  request body v1.DeleteUserRequest  true "注册请求参数"
+// @Success 200 {object} bool
+// @Router /delete [post]
 func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 	var req v1.DeleteUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -200,6 +222,15 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 	v1.HandleSuccess(ctx, ok)
 }
 
+// UpdateUser godoc
+// @Summary 修改用户
+// @Description 用于修改用户信息
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Param request body v1.UpdateUserRequest  true "注册请求参数"
+// @Success 200 {object} bool
+// @Router /update [post]
 func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 	var req v1.UpdateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -215,6 +246,14 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 	v1.HandleSuccess(ctx, ok)
 }
 
+// AddUserSignIn godoc
+// @Summary 用户签到
+// @Description 用于用户签到
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Success 200 {object} bool
+// @Router /add/sign_in [post]
 func (h *UserHandler) AddUserSignIn(ctx *gin.Context) {
 	// 必须要登录才能签到
 	session := sessions.Default(ctx)
@@ -232,6 +271,14 @@ func (h *UserHandler) AddUserSignIn(ctx *gin.Context) {
 	v1.HandleSuccess(ctx, result)
 }
 
+// GetUserSignIn godoc
+// @Summary 签到日历
+// @Description 用于用户查看签到日历
+// @Tags 用户模块（管理员）
+// @Accept json
+// @Produce json
+// @Success 200 {object} []int
+// @Router /get/sign_in [get]
 func (h *UserHandler) GetUserSignIn(ctx *gin.Context) {
 	// 必须要登录才能获取签到记录
 	session := sessions.Default(ctx)

@@ -220,7 +220,7 @@ func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.Quest
 
 func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error) {
 	var questions []model.Question
-	if err := r.DB(ctx).Unscoped().Find(&questions).Error; err != nil {
+	if err := r.DB(ctx).Unscoped().Where("update_time >= ?", time).Find(&questions).Error; err != nil {
 		return nil, err
 	}
 	return questions, nil
