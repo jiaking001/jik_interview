@@ -55,15 +55,23 @@ func syncDataToElasticsearch(ctx context.Context, t questionJob) error {
 	for _, q := range question {
 		es := model.QuestionEs{
 			Id:         int64(q.ID),
-			Title:      *q.Title,
-			Content:    *q.Content,
-			Tags:       *q.Tags,
-			Answer:     *q.Answer,
 			UserId:     int64(q.UserID),
 			EditTime:   q.EditTime,
 			CreateTime: q.CreateTime,
 			UpdateTime: q.UpdateTime,
 			IsDelete:   q.IsDelete,
+		}
+		if q.Title != nil {
+			es.Title = *q.Title
+		}
+		if q.Content != nil {
+			es.Content = *q.Content
+		}
+		if q.Tags != nil {
+			es.Tags = *q.Tags
+		}
+		if q.Answer != nil {
+			es.Answer = *q.Answer
 		}
 		data = append(data, es)
 	}
