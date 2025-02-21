@@ -12,6 +12,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -360,33 +361,43 @@ func (r *questionRepository) GetQuestion(ctx context.Context, req *v1.QuestionRe
 		}
 		s = sortField + " " + sortOrder
 	}
-	var id, title, userId, questionBankID string
+	// 拼接查询字符串
+	// query 查询字符串
+	var conditions []string
+	var params []interface{}
+	var query string
+	var id, title, userId, questionBankID, tags string
 	if req.ID != nil {
 		id = *req.ID
+		conditions = append(conditions, "question.id LIKE ?")
+		params = append(params, "%"+id+"%")
 	}
 	if req.Title != nil {
 		title = *req.Title
+		conditions = append(conditions, "title LIKE ?")
+		params = append(params, "%"+title+"%")
 	}
 	if req.UserID != nil {
 		userId = *req.UserID
+		conditions = append(conditions, "user_id LIKE ?")
+		params = append(params, "%"+userId+"%")
 	}
 	if req.QuestionBankID != nil {
 		questionBankID = *req.QuestionBankID
-		// TODO 未实现根据题库id查询
-		_ = questionBankID
+		conditions = append(conditions, "question_bank_id LIKE ?")
+		params = append(params, "%"+questionBankID+"%")
 	}
-	// TODO 未实现根据标签查询
+	if req.Tags != nil {
+		tags = utils.StringsToString(req.Tags)
+		conditions = append(conditions, "tags LIKE ?")
+		params = append(params, "%"+tags+"%")
+	}
+
+	// 构造完整的查询条件
+	query = strings.Join(conditions, " AND ")
+
 	if err := r.DB(ctx).Joins("LEFT JOIN question_bank_question "+
-		"ON question.id = question_bank_question.question_id").Where(""+
-		"question.id LIKE ? AND "+
-		"question.title LIKE ? AND "+
-		"question.user_id LIKE ?",
-		//"AND question_bank_question.question_bank_id LIKE ?",
-		"%"+id+"%",
-		"%"+title+"%",
-		"%"+userId+"%",
-		//"%"+questionBankID+"%",
-	).Order(s).Distinct().Find(&questions).Group("question.id").Count(&total).Error; err != nil {
+		"ON question.id = question_bank_question.question_id").Where(query, params...).Order(s).Distinct().Find(&questions).Group("question.id").Count(&total).Error; err != nil {
 		return nil, 0, v1.ErrNotFound
 	}
 	return questions, int(total), nil

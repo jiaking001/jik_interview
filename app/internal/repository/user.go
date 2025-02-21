@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type UserRepository interface {
@@ -96,29 +97,42 @@ func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) 
 		}
 		s = sortField + " " + sortOrder
 	}
+	// 拼接查询字符串
+	// query 查询字符串
+	var conditions []string
+	var params []interface{}
+	var query string
 	var id, userAccount, userName, userRole, userProfile string
 	if req.ID != nil {
 		id = *req.ID
+		conditions = append(conditions, "id LIKE ?")
+		params = append(params, "%"+id+"%")
 	}
 	if req.UserName != nil {
 		userName = *req.UserName
+		conditions = append(conditions, "user_name LIKE ?")
+		params = append(params, "%"+userName+"%")
 	}
 	if req.UserAccount != nil {
 		userAccount = *req.UserAccount
+		conditions = append(conditions, "user_account LIKE ?")
+		params = append(params, "%"+userAccount+"%")
 	}
 	if req.UserRole != nil {
 		userRole = *req.UserRole
+		conditions = append(conditions, "user_role LIKE ?")
+		params = append(params, "%"+userRole+"%")
 	}
 	if req.UserProfile != nil {
 		userProfile = *req.UserProfile
+		conditions = append(conditions, "user_profile LIKE ?")
+		params = append(params, "%"+userProfile+"%")
 	}
-	if err := r.DB(ctx).Where("id LIKE ? AND user_account LIKE ? AND user_name LIKE ? AND user_role LIKE ? AND user_profile LIKE ?",
-		"%"+id+"%",
-		"%"+userAccount+"%",
-		"%"+userName+"%",
-		"%"+userRole+"%",
-		"%"+userProfile+"%",
-	).Order(s).Find(&users).Count(&total).Error; err != nil {
+
+	// 构造完整的查询条件
+	query = strings.Join(conditions, " AND ")
+
+	if err := r.DB(ctx).Where(query, params...).Order(s).Find(&users).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	return users, int(total), nil

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type QuestionBankRepository interface {
@@ -104,7 +105,6 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 	var questionBanks []model.QuestionBank
 	var total int64
 	var s string
-	var query string
 	if req.SortOrder != nil && req.SortField != nil {
 		var sortOrder string
 		var sortField string
@@ -120,29 +120,32 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 		}
 		s = sortField + " " + sortOrder
 	}
-	var f bool
+	// 拼接查询字符串
+	// query 查询字符串
+	var conditions []string
+	var params []interface{}
+	var query string
 	var id, title, description string
 	if req.ID != nil {
 		id = *req.ID
-		query += "id LIKE " + "%" + id + "%"
-		f = true
+		conditions = append(conditions, "id LIKE ?")
+		params = append(params, "%"+id+"%")
 	}
 	if req.Title != nil {
 		title = *req.Title
-		if f {
-			query += " AND "
-		}
-		query += "title LIKE " + "%" + title + "%"
-		f = true
+		conditions = append(conditions, "title LIKE ?")
+		params = append(params, "%"+title+"%")
 	}
 	if req.Description != nil {
 		description = *req.Description
-		if f {
-			query += " AND "
-		}
-		query += "description LIKE " + "%" + description + "%"
+		conditions = append(conditions, "description LIKE ?")
+		params = append(params, "%"+description+"%")
 	}
-	if err := r.DB(ctx).Where(query).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
+
+	// 构造完整的查询条件
+	query = strings.Join(conditions, " AND ")
+
+	if err := r.DB(ctx).Where(query, params...).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
 		return nil, 0, v1.ErrNotFound
 	}
 	return questionBanks, int(total), nil
