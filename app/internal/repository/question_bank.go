@@ -145,8 +145,18 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 	// 构造完整的查询条件
 	query = strings.Join(conditions, " AND ")
 
-	if err := r.DB(ctx).Where(query, params...).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
-		return nil, 0, v1.ErrNotFound
+	var current int
+	if req.Current == nil {
+		current = 0
+	} else {
+		current = *req.Current
+	}
+
+	if err := r.DB(ctx).Where(query, params...).Model(&questionBanks).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := r.DB(ctx).Where(query, params...).Order(s).Limit(*req.PageSize).Offset(*req.PageSize * (current - 1)).Find(&questionBanks).Error; err != nil {
+		return nil, 0, err
 	}
 	return questionBanks, int(total), nil
 }

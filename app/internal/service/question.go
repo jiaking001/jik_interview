@@ -298,6 +298,9 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 func (s *questionService) ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error) {
 	current := req.Current
 	size := req.PageSize
+	if req.PageSize == nil {
+		return v1.QuestionQueryResponseData[v1.Question]{}, v1.ParamsError
+	}
 	questions, total, err := s.questionRepository.GetQuestion(ctx, req)
 	if err != nil {
 		return v1.QuestionQueryResponseData[v1.Question]{}, err

@@ -396,8 +396,21 @@ func (r *questionRepository) GetQuestion(ctx context.Context, req *v1.QuestionRe
 	// 构造完整的查询条件
 	query = strings.Join(conditions, " AND ")
 
+	var current int
+	if req.Current == nil {
+		current = 0
+	} else {
+		current = *req.Current
+	}
+
+	// 查询总数
 	if err := r.DB(ctx).Joins("LEFT JOIN question_bank_question "+
 		"ON question.id = question_bank_question.question_id").Where(query, params...).Order(s).Distinct().Find(&questions).Group("question.id").Count(&total).Error; err != nil {
+		return nil, 0, v1.ErrNotFound
+	}
+	// 分页
+	if err := r.DB(ctx).Joins("LEFT JOIN question_bank_question "+
+		"ON question.id = question_bank_question.question_id").Where(query, params...).Order(s).Distinct().Limit(*req.PageSize).Offset(*req.PageSize * (current - 1)).Find(&questions).Group("question.id").Count(&total).Error; err != nil {
 		return nil, 0, v1.ErrNotFound
 	}
 	return questions, int(total), nil
