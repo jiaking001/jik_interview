@@ -136,7 +136,7 @@ func (s *userService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest)
 }
 
 func (s *userService) AddUser(ctx context.Context, req *v1.AddUserRequest) (uint64, error) {
-	if *req.UserAccount == "" {
+	if req.UserAccount == nil {
 		return 0, v1.ErrIllegalAccount
 	}
 	user, err := s.userRepo.GetByAccount(ctx, *req.UserAccount)
@@ -145,6 +145,9 @@ func (s *userService) AddUser(ctx context.Context, req *v1.AddUserRequest) (uint
 	}
 	if user != nil {
 		return 0, v1.ErrAccountAlreadyUse
+	}
+	if req.UserRole == nil {
+		return 0, v1.ErrIllegalRole
 	}
 	if len(*req.UserAccount) < 3 || len(*req.UserAccount) > 20 {
 		return 0, v1.ErrIllegalAccount

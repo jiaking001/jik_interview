@@ -9,6 +9,7 @@ var (
 	ErrInternalServerError = newError(500, "Internal Server Error")
 
 	// user
+	ErrIllegalRole           = newError(40000, "未设置用户权限")
 	ErrAccountAlreadyUse     = newError(40000, "账号已被注册")
 	ErrInconsistentPasswords = newError(40000, "两次密码输入不一致")
 	ErrIllegalPassword       = newError(40000, "密码不规范")
