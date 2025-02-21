@@ -53,17 +53,24 @@ func (r *questionRepository) DeleteBatchQuestion(ctx context.Context, questions 
 	// 每次删除1000条
 	for i := 0; i < len(questions); i += 1000 {
 		for j := i; j < i+1000 && j < len(questions); j++ {
-			if err := r.DB(ctx).Where("id = ?", questions[j]).Delete(&model.Question{}).Error; err != nil {
+			// 逻辑删除
+			if err := tx.Where("id = ?", questions[j]).Update("is_delete", "1").Error; err != nil {
 				tx.Rollback()
 				return err
 			}
-			if err := r.DB(ctx).Where("question_id = ?", questions[j]).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+			if err := tx.Where("id = ?", questions[j]).Delete(&model.Question{}).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+			// 删除与题库的关联
+			if err := tx.Where("question_id = ?", questions[j]).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
 				tx.Rollback()
 				return err
 			}
 		}
 	}
 
+	// 提交事务
 	tx.Commit()
 	return nil
 }
@@ -279,11 +286,15 @@ func (r *questionRepository) DeleteById(ctx context.Context, question *model.Que
 		}
 	}()
 
-	if err := r.DB(ctx).Where("id = ?", id).Delete(&question).Error; err != nil {
+	if err := tx.Save(question).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := r.DB(ctx).Where("question_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+	if err := tx.Where("id = ?", id).Delete(question).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Where("question_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -124,15 +124,14 @@ func (s *userService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest)
 	if err != nil {
 		return false, err
 	}
+
+	// 删除
+	user.IsDelete = 1
 	err = s.userRepo.DeleteById(ctx, user, id)
 	if err != nil {
 		return false, err
 	}
-	user.IsDelete = 1
-	err = s.userRepo.Update(ctx, user)
-	if err != nil {
-		return false, err
-	}
+
 	return true, nil
 }
 

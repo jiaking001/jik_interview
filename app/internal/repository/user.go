@@ -58,9 +58,22 @@ func (r *userRepository) GetCount(ctx context.Context) (int, error) {
 }
 
 func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id uint64) error {
-	if err := r.DB(ctx).Where("id = ?", id).Delete(&user).Error; err != nil {
+	tx := r.DB(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Save(user).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
+	if err := tx.Where("id = ?", id).Delete(user).Error; err != nil {
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
 

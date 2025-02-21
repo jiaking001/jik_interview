@@ -125,15 +125,14 @@ func (s *questionBankService) DeleteUser(ctx context.Context, req *v1.DeleteQues
 	if err != nil {
 		return false, err
 	}
+
+	// 删除
+	bank.IsDelete = 1
 	err = s.questionBankRepository.DeleteById(ctx, bank, id)
 	if err != nil {
 		return false, err
 	}
-	bank.IsDelete = 1
-	err = s.questionBankRepository.Update(ctx, bank)
-	if err != nil {
-		return false, err
-	}
+
 	return true, nil
 }
 

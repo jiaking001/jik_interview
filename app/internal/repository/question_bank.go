@@ -45,11 +45,15 @@ func (r *questionBankRepository) DeleteById(ctx context.Context, bank *model.Que
 		}
 	}()
 
-	if err := r.DB(ctx).Where("id = ?", id).Delete(&bank).Error; err != nil {
+	if err := tx.Save(bank).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := r.DB(ctx).Where("question_bank_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
+	if err := tx.Where("id = ?", id).Delete(bank).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Where("question_bank_id = ?", id).Delete(&model.QuestionBankQuestion{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -100,6 +104,7 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 	var questionBanks []model.QuestionBank
 	var total int64
 	var s string
+	var query string
 	if req.SortOrder != nil && req.SortField != nil {
 		var sortOrder string
 		var sortField string
@@ -115,22 +120,29 @@ func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.Qu
 		}
 		s = sortField + " " + sortOrder
 	}
+	var f bool
 	var id, title, description string
 	if req.ID != nil {
 		id = *req.ID
+		query += "id LIKE " + "%" + id + "%"
+		f = true
 	}
 	if req.Title != nil {
 		title = *req.Title
+		if f {
+			query += " AND "
+		}
+		query += "title LIKE " + "%" + title + "%"
+		f = true
 	}
 	if req.Description != nil {
 		description = *req.Description
+		if f {
+			query += " AND "
+		}
+		query += "description LIKE " + "%" + description + "%"
 	}
-	// TODO 当有字段为null时查询不到
-	if err := r.DB(ctx).Where("id LIKE ? AND title LIKE ? AND description LIKE ?",
-		"%"+id+"%",
-		"%"+title+"%",
-		"%"+description+"%",
-	).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
+	if err := r.DB(ctx).Where(query).Order(s).Find(&questionBanks).Count(&total).Error; err != nil {
 		return nil, 0, v1.ErrNotFound
 	}
 	return questionBanks, int(total), nil

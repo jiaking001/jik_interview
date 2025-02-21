@@ -37,7 +37,7 @@ func (r *questionBankQuestionRepository) BatchRemoveQuestionBankQuestion(ctx con
 	// 每次删除1000条
 	for i := 0; i < len(question); i += 1000 {
 		for j := i; j < i+1000 && j < len(question); j++ {
-			if err := r.DB(ctx).Where("question_id = ? AND question_bank_id = ?", question[j].QuestionID, question[j].QuestionBankID).Delete(question).Error; err != nil {
+			if err := tx.Where("question_id = ? AND question_bank_id = ?", question[j].QuestionID, question[j].QuestionBankID).Delete(question).Error; err != nil {
 				tx.Rollback()
 				return err
 			}
