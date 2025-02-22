@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/internal/middleware"
 	"context"
 	"flag"
 	"fmt"
@@ -27,6 +28,9 @@ import (
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
+	// 初始化 Sentinel
+	middleware.InitSentinel()
+
 	var envConf = flag.String("conf", "config/local.yml", "config path, eg: -conf ./config/local.yml")
 	flag.Parse()
 	conf := config.NewConfig(*envConf)

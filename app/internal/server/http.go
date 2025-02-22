@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	sentinelPlugin "github.com/sentinel-group/sentinel-go-adapters/gin"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -49,6 +50,8 @@ func NewHTTPServer(
 		middleware.ResponseLogMiddleware(logger),
 		middleware.RequestLogMiddleware(logger),
 		//middleware.SignMiddleware(log),
+		// 集成 Sentinel
+		sentinelPlugin.SentinelMiddleware(),
 	)
 
 	v1 := s.Group("/api")
