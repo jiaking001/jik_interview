@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/circuitbreaker"
 	"github.com/alibaba/sentinel-golang/core/flow"
 	"log"
 )
@@ -13,7 +14,7 @@ func InitSentinel() {
 		log.Fatalf("Failed to initialize Sentinel: %v", err)
 	}
 
-	// 加载流量控制规则
+	// 加载流量控制规则（限流）
 	_, err = flow.LoadRules([]*flow.Rule{
 		// 对查看题库列表限流
 		{
@@ -37,7 +38,21 @@ func InitSentinel() {
 			ControlBehavior:        flow.Reject,
 		},
 	})
+
 	if err != nil {
 		log.Fatalf("Failed to load flow rules: %v", err)
+	}
+
+	// 配置熔断规则
+	rule := circuitbreaker.Rule{
+		Resource:         "POST:/api/questionBank/list/page/vo",
+		Strategy:         circuitbreaker.ErrorRatio,
+		Threshold:        0.2,  // 异常比例阈值
+		MinRequestAmount: 10,   // 最小请求数
+		StatIntervalMs:   1000, // 统计时间窗口
+		RetryTimeoutMs:   5000, // 熔断持续时间
+	}
+	if _, err = circuitbreaker.LoadRules([]*circuitbreaker.Rule{&rule}); err != nil {
+		log.Fatalf("Failed to load circuit breaker rules: %+v", err)
 	}
 }

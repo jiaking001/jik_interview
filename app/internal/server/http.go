@@ -1,6 +1,7 @@
 package server
 
 import (
+	v1 "app/api/v1"
 	"app/docs"
 	"app/internal/handler"
 	"app/internal/middleware"
@@ -14,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	hp "net/http"
 )
 
 func NewHTTPServer(
@@ -51,7 +53,13 @@ func NewHTTPServer(
 		middleware.RequestLogMiddleware(logger),
 		//middleware.SignMiddleware(log),
 		// 集成 Sentinel
-		sentinelPlugin.SentinelMiddleware(),
+		sentinelPlugin.SentinelMiddleware(
+			// 自定义降级逻辑
+			sentinelPlugin.WithBlockFallback(func(ctx *gin.Context) {
+				v1.HandleError(ctx, hp.StatusUnauthorized, v1.ErrSystemIsBusy, nil)
+				return
+			}),
+		),
 	)
 
 	v1 := s.Group("/api")

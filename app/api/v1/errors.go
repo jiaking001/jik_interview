@@ -20,4 +20,6 @@ var (
 
 	// questionBank
 	ErrTitleAlreadyUse = newError(40000, "题库或题目已存在")
+
+	ErrSystemIsBusy = newError(40000, "系统繁忙,请稍后再试")
 )
