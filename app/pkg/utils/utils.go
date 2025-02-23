@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
 )
@@ -63,4 +64,16 @@ func StringToUint64(s string) (uint64, error) {
 // Uint64TOString uint64转化成字符串
 func Uint64TOString(i uint64) string {
 	return strconv.FormatUint(i, 10)
+}
+
+// GetIPAddress 获取ip地址
+func GetIPAddress(c *gin.Context) string {
+	ip := c.Request.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = c.Request.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip = c.ClientIP()
+	}
+	return strings.Split(ip, ",")[0]
 }

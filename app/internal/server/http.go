@@ -60,6 +60,8 @@ func NewHTTPServer(
 				return
 			}),
 		),
+		// 黑名单
+		middleware.BlacklistMiddleware(),
 	)
 
 	v1 := s.Group("/api")

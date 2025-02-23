@@ -30,6 +30,8 @@ import (
 func main() {
 	// 初始化 Sentinel
 	middleware.InitSentinel()
+	// 初始化黑名单
+	middleware.BlackFilter()
 
 	var envConf = flag.String("conf", "config/local.yml", "config path, eg: -conf ./config/local.yml")
 	flag.Parse()

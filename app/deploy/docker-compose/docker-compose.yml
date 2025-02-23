@@ -54,10 +54,24 @@ services:
     depends_on:
       - elasticsearch
 
+  nacos:
+    container_name: nacos
+    image: nacos/nacos-server:v2.2.0
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+    environment:
+      - MODE=standalone
+      - PREFER_HOST_MODE=hostname
+    networks:
+      - nacos-network
+
 volumes:
   esdata:
     driver: local
 
 networks:
   elastic:
+    driver: bridge
+  nacos-network:
     driver: bridge
