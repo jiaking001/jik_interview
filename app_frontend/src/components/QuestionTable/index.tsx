@@ -56,9 +56,7 @@ const QuestionTable: React.FC = (props: Props) => {
             title: "标签",
             dataIndex: "tagList",
             valueType: "select",
-            fieldProps: {
-                mode: "tags",
-            },
+            hideInSearch: true,
             render: (_, record) => {
                 return <TagList tagList={record.tagList}/>;
             },

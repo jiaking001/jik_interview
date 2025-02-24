@@ -3,11 +3,13 @@ package repository
 import (
 	v1 "app/api/v1"
 	"app/internal/model"
+	"app/pkg/utils"
 	"context"
 	"errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 )
 
 type UserRepository interface {
@@ -20,6 +22,9 @@ type UserRepository interface {
 	GetCount(ctx context.Context) (int, error)
 	AddUserSignIn(ctx context.Context, key string, offset int64) error
 	GetUserSignIn(ctx context.Context, key string) ([]byte, error)
+	GetTokenByDevice(ctx context.Context, id uint64, deviceType string) (string, error)
+	AddTokenByDevice(ctx context.Context, id uint64, deviceType string, token string) error
+	DeleteTokenByDevice(ctx context.Context, id uint64, deviceType string) error
 }
 
 func NewUserRepository(
@@ -32,6 +37,32 @@ func NewUserRepository(
 
 type userRepository struct {
 	*Repository
+}
+
+func (r *userRepository) DeleteTokenByDevice(ctx context.Context, id uint64, deviceType string) error {
+	idStr := utils.Uint64TOString(id)
+	if err := r.rdb.HDel(ctx, "user_tokens:"+idStr, deviceType).Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) AddTokenByDevice(ctx context.Context, id uint64, deviceType string, token string) error {
+	idStr := utils.Uint64TOString(id)
+	if err := r.rdb.HSet(ctx, "user_tokens:"+idStr, deviceType, token).Err(); err != nil {
+		return err
+	}
+	// 设置过期时间 一天后过期
+	if err := r.rdb.Expire(ctx, "user_tokens:"+idStr, time.Hour*24).Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetTokenByDevice 获取当前用户登录端的Token
+func (r *userRepository) GetTokenByDevice(ctx context.Context, id uint64, deviceType string) (string, error) {
+	idStr := utils.Uint64TOString(id)
+	return r.rdb.HGet(ctx, "user_tokens:"+idStr, deviceType).Result()
 }
 
 func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]byte, error) {

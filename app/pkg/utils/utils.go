@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/mssola/useragent"
 	"strconv"
 	"strings"
 )
@@ -76,4 +77,14 @@ func GetIPAddress(c *gin.Context) string {
 		ip = c.ClientIP()
 	}
 	return strings.Split(ip, ",")[0]
+}
+
+// GetDeviceType 获取用户登录设备
+func GetDeviceType(userAgent string) string {
+	ua := useragent.New(userAgent)
+	if ua.Mobile() {
+		return "mobile"
+	} else {
+		return "pc"
+	}
 }

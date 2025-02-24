@@ -70,18 +70,23 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	_, user, err := h.userService.Login(ctx, &req)
+	// 获取 User-Agent
+	userAgent := ctx.GetHeader("User-Agent")
+	token, user, err := h.userService.Login(ctx, &req, userAgent)
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return
 	}
+
+	// 设置 session
 	session := sessions.Default(ctx)
-	session.Set("user_login", user)
+	session.Set("user_login", token)
 	err = session.Save()
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return
 	}
+
 	v1.HandleSuccess(ctx, v1.LoginResponseData{
 		Id:          user.ID,
 		UserName:    user.UserName,
@@ -103,13 +108,28 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 // @Router /logout [post]
 func (h *UserHandler) Logout(ctx *gin.Context) {
 	session := sessions.Default(ctx)
+	// 获取用户信息
+	t := session.Get("user_login")
+	if t == nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
+	token := t.(string)
+	// 删除 session
 	session.Delete("user_login")
 	err := session.Save()
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return
 	}
-	v1.HandleSuccess(ctx, true)
+	// 获取 User-Agent
+	userAgent := ctx.GetHeader("User-Agent")
+	ok, err := h.userService.Logout(ctx, token, userAgent)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+	v1.HandleSuccess(ctx, ok)
 }
 
 // GetLoginUser godoc
@@ -122,14 +142,17 @@ func (h *UserHandler) Logout(ctx *gin.Context) {
 // @Router /get/login [post]
 func (h *UserHandler) GetLoginUser(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-	userInterface := session.Get("user_login")
-	if userInterface == nil {
+	t := session.Get("user_login")
+	if t == nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
 		return
 	}
-	user := userInterface.(*model.User)
-	if user == nil {
-		v1.HandleError(ctx, http.StatusUnauthorized, v1.ErrUnauthorized, nil)
+	token := t.(string)
+	// 获取 User-Agent
+	userAgent := ctx.GetHeader("User-Agent")
+	user, err := h.userService.GetLoginUser(ctx, token, userAgent)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return
 	}
 	v1.HandleSuccess(ctx, v1.GetLoginUserResponseData{
@@ -257,13 +280,18 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 func (h *UserHandler) AddUserSignIn(ctx *gin.Context) {
 	// 必须要登录才能签到
 	session := sessions.Default(ctx)
-	userInterface := session.Get("user_login")
-	if userInterface == nil {
+	t := session.Get("user_login")
+	if t == nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
 		return
 	}
-	user := userInterface.(*model.User)
-	result, err := h.userService.AddUserSignIn(ctx, user.ID)
+	token := t.(string)
+	if token == "" {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
+
+	result, err := h.userService.AddUserSignIn(ctx, token)
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return
@@ -282,12 +310,16 @@ func (h *UserHandler) AddUserSignIn(ctx *gin.Context) {
 func (h *UserHandler) GetUserSignIn(ctx *gin.Context) {
 	// 必须要登录才能获取签到记录
 	session := sessions.Default(ctx)
-	userInterface := session.Get("user_login")
-	if userInterface == nil {
+	t := session.Get("user_login")
+	if t == nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
 		return
 	}
-	user := userInterface.(*model.User)
+	token := t.(string)
+	if token == "" {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
 	var req v1.GetUserSignInRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
@@ -301,7 +333,7 @@ func (h *UserHandler) GetUserSignIn(ctx *gin.Context) {
 		year = *req.Year
 	}
 	var dayList []int
-	dayList, err := h.userService.GetUserSignIn(ctx, user.ID, year)
+	dayList, err := h.userService.GetUserSignIn(ctx, token, year)
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return

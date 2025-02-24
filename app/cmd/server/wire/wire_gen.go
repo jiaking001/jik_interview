@@ -25,9 +25,9 @@ import (
 
 func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), error) {
 	jwtJWT := jwt.NewJwt(viperViper)
+	client := repository.NewRedis(viperViper)
 	handlerHandler := handler.NewHandler(logger)
 	db := repository.NewDB(viperViper, logger)
-	client := repository.NewRedis(viperViper)
 	elasticsearchClient := repository.NewElasticsearch(viperViper)
 	repositoryRepository := repository.NewRepository(logger, db, client, elasticsearchClient)
 	transaction := repository.NewTransaction(repositoryRepository)
@@ -45,7 +45,7 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	questionBankQuestionRepository := repository.NewQuestionBankQuestionRepository(repositoryRepository)
 	questionBankQuestionService := service.NewQuestionBankQuestionService(serviceService, questionBankQuestionRepository)
 	questionBankQuestionHandler := handler.NewQuestionBankQuestionHandler(handlerHandler, questionBankQuestionService)
-	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, userHandler, questionHandler, questionBankHandler, questionBankQuestionHandler)
+	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, client, userHandler, questionHandler, questionBankHandler, questionBankQuestionHandler)
 	jobJob := job.NewJob(transaction, logger, sidSid)
 	userJob := job.NewUserJob(jobJob, userRepository)
 	questionJob := job.NewQuestionJob(jobJob, questionRepository)

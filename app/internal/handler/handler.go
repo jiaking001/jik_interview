@@ -3,6 +3,7 @@ package handler
 import (
 	"app/pkg/jwt"
 	"app/pkg/log"
+	"app/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,5 +23,5 @@ func GetUserIdFromCtx(ctx *gin.Context) string {
 	if !exists {
 		return ""
 	}
-	return v.(*jwt.MyCustomClaims).UserId
+	return utils.Uint64TOString(v.(*jwt.MyCustomClaims).User.ID)
 }

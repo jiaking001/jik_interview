@@ -5,7 +5,11 @@ import (
 	"app/internal/model"
 	"app/internal/repository"
 	"app/pkg/constant"
+	"app/pkg/jwt"
+	"app/pkg/utils"
 	"context"
+	"errors"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
@@ -13,14 +17,15 @@ import (
 
 type UserService interface {
 	Register(ctx context.Context, req *v1.RegisterRequest) error
-	Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error)
-	GetLoginUser(ctx context.Context) error
+	Login(ctx context.Context, req *v1.LoginRequest, userAgent string) (string, *model.User, error)
+	GetLoginUser(ctx context.Context, token string, userAgent string) (model.User, error)
 	ListUserByPage(ctx context.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error)
 	AddUser(ctx context.Context, req *v1.AddUserRequest) (uint64, error)
 	DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (bool, error)
 	UpdateUser(ctx context.Context, req *v1.UpdateUserRequest) (bool, error)
-	AddUserSignIn(ctx context.Context, id uint64) (bool, error)
-	GetUserSignIn(ctx context.Context, id uint64, year int) ([]int, error)
+	AddUserSignIn(ctx context.Context, token string) (bool, error)
+	GetUserSignIn(ctx context.Context, token string, year int) ([]int, error)
+	Logout(ctx context.Context, token string, userAgent string) (bool, error)
 }
 
 func NewUserService(
@@ -38,8 +43,28 @@ type userService struct {
 	*Service
 }
 
-func (s *userService) GetUserSignIn(ctx context.Context, id uint64, year int) ([]int, error) {
-	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(id, 10))
+func (s *userService) Logout(ctx context.Context, token string, userAgent string) (bool, error) {
+	// 解析 token
+	claims, err := s.jwt.ParseToken(token)
+	if err != nil {
+		return false, err
+	}
+	// 解析 User-Agent
+	deviceType := utils.GetDeviceType(userAgent)
+	if err = s.userRepo.DeleteTokenByDevice(ctx, claims.User.ID, deviceType); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *userService) GetUserSignIn(ctx context.Context, token string, year int) ([]int, error) {
+	// 解析 token
+	claims, err := s.jwt.ParseToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(claims.User.ID, 10))
 	bitset, err := s.userRepo.GetUserSignIn(ctx, key)
 	if err != nil {
 		return nil, err
@@ -63,12 +88,17 @@ func (s *userService) GetUserSignIn(ctx context.Context, id uint64, year int) ([
 	return dayList, nil
 }
 
-func (s *userService) AddUserSignIn(ctx context.Context, id uint64) (bool, error) {
+func (s *userService) AddUserSignIn(ctx context.Context, token string) (bool, error) {
+	// 解析 token
+	claims, err := s.jwt.ParseToken(token)
+	if err != nil {
+		return false, err
+	}
 	date := time.Now()
 	year := date.Year()
-	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(id, 10))
+	key := constant.GetUserSignInRedisKey(strconv.Itoa(year), strconv.FormatUint(claims.User.ID, 10))
 	offset := date.YearDay()
-	err := s.userRepo.AddUserSignIn(ctx, key, int64(offset))
+	err = s.userRepo.AddUserSignIn(ctx, key, int64(offset))
 	if err != nil {
 		return false, err
 	}
@@ -217,9 +247,32 @@ func (s *userService) ListUserByPage(ctx context.Context, req *v1.UserQueryReque
 }
 
 // GetLoginUser 获取当前登录用户
-func (s *userService) GetLoginUser(ctx context.Context) error {
+func (s *userService) GetLoginUser(ctx context.Context, token string, userAgent string) (model.User, error) {
 	// 判断是否已登录
-	return nil
+	// 解析 token
+	claims, err := s.jwt.ParseToken(token)
+	if err != nil {
+		return model.User{}, err
+	}
+	// 解析 User-Agent
+	deviceType := utils.GetDeviceType(userAgent)
+	// 检查当前设备类型是否已经登录
+	nowToken, err := s.userRepo.GetTokenByDevice(ctx, claims.User.ID, deviceType)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return model.User{}, err
+	}
+	if token != nowToken {
+		return model.User{}, v1.NotLoginError
+	}
+	return model.User{
+		ID:          claims.User.ID,
+		UserName:    claims.User.UserName,
+		UserAvatar:  claims.User.UserAvatar,
+		UserProfile: claims.User.UserProfile,
+		UserRole:    claims.User.UserRole,
+		CreateTime:  claims.User.CreateTime,
+		UpdateTime:  claims.User.UpdateTime,
+	}, nil
 }
 
 // Register 用户注册
@@ -265,7 +318,7 @@ func (s *userService) Register(ctx context.Context, req *v1.RegisterRequest) err
 }
 
 // Login 用户登录
-func (s *userService) Login(ctx context.Context, req *v1.LoginRequest) (string, *model.User, error) {
+func (s *userService) Login(ctx context.Context, req *v1.LoginRequest, userAgent string) (string, *model.User, error) {
 	user, err := s.userRepo.GetByAccount(ctx, req.UserAccount)
 	if err != nil || user == nil {
 		return "", nil, v1.ErrPassword
@@ -275,9 +328,39 @@ func (s *userService) Login(ctx context.Context, req *v1.LoginRequest) (string, 
 	if err != nil {
 		return "", nil, v1.ErrPassword
 	}
-	token, err := s.jwt.GenToken(strconv.FormatUint(user.ID, 10), time.Now().Add(time.Hour*24*90))
+
+	// 生成 token
+	token, err := s.jwt.GenToken(jwt.User{
+		ID:          user.ID,
+		UserName:    user.UserName,
+		UserAvatar:  user.UserAvatar,
+		UserProfile: user.UserProfile,
+		UserRole:    user.UserRole,
+		CreateTime:  user.CreateTime,
+		UpdateTime:  user.UpdateTime,
+	}, time.Now().Add(time.Hour*24))
 	if err != nil {
 		return "", nil, v1.ErrInternalServerError
 	}
+
+	// 解析 User-Agent
+	deviceType := utils.GetDeviceType(userAgent)
+	// 检查当前设备类型是否已经登录
+	oldToken, err := s.userRepo.GetTokenByDevice(ctx, user.ID, deviceType)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return "", nil, err
+	}
+	if oldToken != "" {
+		err = s.userRepo.DeleteTokenByDevice(ctx, user.ID, deviceType)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+	// 存储新的 Token
+	err = s.userRepo.AddTokenByDevice(ctx, user.ID, deviceType, token)
+	if err != nil {
+		return "", nil, err
+	}
+
 	return token, user, nil
 }

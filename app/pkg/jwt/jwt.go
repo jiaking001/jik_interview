@@ -10,11 +10,22 @@ import (
 )
 
 type JWT struct {
-	key []byte
+	key  []byte
+	User User
+}
+
+type User struct {
+	ID          uint64
+	UserName    *string
+	UserAvatar  *string
+	UserProfile *string
+	UserRole    string
+	CreateTime  time.Time
+	UpdateTime  time.Time
 }
 
 type MyCustomClaims struct {
-	UserId string
+	User
 	jwt.RegisteredClaims
 }
 
@@ -22,9 +33,9 @@ func NewJwt(conf *viper.Viper) *JWT {
 	return &JWT{key: []byte(conf.GetString("security.jwt.key"))}
 }
 
-func (j *JWT) GenToken(userId string, expiresAt time.Time) (string, error) {
+func (j *JWT) GenToken(user User, expiresAt time.Time) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyCustomClaims{
-		UserId: userId,
+		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

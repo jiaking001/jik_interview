@@ -119,7 +119,6 @@ export default function BasicLayout({children}: Props) {
                 actionsRender={(props) => {
                     if (props.isMobile) return [];
                     return [
-                        <SearchInput key="search"/>,
                         <a key="github" href="https://github.com/jiaking001/jik_interview" target="_blank">
                             <GithubFilled key="GithubFilled"/>,
                         </a>,

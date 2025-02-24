@@ -11,6 +11,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	sentinelPlugin "github.com/sentinel-group/sentinel-go-adapters/gin"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
@@ -22,6 +23,7 @@ func NewHTTPServer(
 	logger *log.Logger,
 	conf *viper.Viper,
 	jwt *jwt.JWT,
+	rdb *redis.Client,
 	userHandler *handler.UserHandler,
 	questionHandler *handler.QuestionHandler,
 	questionBankHandler *handler.QuestionBankHandler,
@@ -57,17 +59,19 @@ func NewHTTPServer(
 			// 自定义降级逻辑
 			sentinelPlugin.WithBlockFallback(func(ctx *gin.Context) {
 				v1.HandleError(ctx, hp.StatusUnauthorized, v1.ErrSystemIsBusy, nil)
-				return
+				ctx.Abort()
 			}),
 		),
 		// 黑名单
 		middleware.BlacklistMiddleware(),
+		// 判断用户是否登录
+		// middleware.GetLoginStatus(jwt, rdb),
 	)
 
-	v1 := s.Group("/api")
+	r := s.Group("/api")
 	{
 		// No route group has permission
-		noAuthRouter := v1.Group("/")
+		noAuthRouter := r.Group("/")
 		{
 			// 用户模块
 			user := noAuthRouter.Group("/user")
@@ -79,8 +83,8 @@ func NewHTTPServer(
 			user.POST("/add", userHandler.AddUser)
 			user.POST("/delete", userHandler.DeleteUser)
 			user.POST("/update", userHandler.UpdateUser)
-			user.POST("/add/sign_in", userHandler.AddUserSignIn)
-			user.GET("/get/sign_in", userHandler.GetUserSignIn)
+			user.POST("/add/sign_in", middleware.GetLoginStatus(jwt, rdb), userHandler.AddUserSignIn)
+			user.GET("/get/sign_in", middleware.GetLoginStatus(jwt, rdb), userHandler.GetUserSignIn)
 
 			// 题库模块
 			questionBank := noAuthRouter.Group("/questionBank")

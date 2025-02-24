@@ -19,6 +19,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang/mock v1.6.0
 	github.com/google/wire v0.5.0
+	github.com/mssola/useragent v1.0.0
 	github.com/nacos-group/nacos-sdk-go v1.1.5
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sentinel-group/sentinel-go-adapters v1.0.1
