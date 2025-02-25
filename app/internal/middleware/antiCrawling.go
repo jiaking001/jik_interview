@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -47,7 +48,7 @@ func AntiCrawling(j *jwt.JWT, rdb *redis.Client, db *gorm.DB) gin.HandlerFunc {
 		totalMinutes := hour*60 + minute
 
 		// 定义 Redis 键
-		countKey := fmt.Sprintf("user:%s:time:%s", id, totalMinutes)
+		countKey := fmt.Sprintf("user:%s:time:%s", utils.Uint64TOString(id), strconv.Itoa(totalMinutes))
 
 		// 使用 Lua 脚本保证原子性
 		script := `
