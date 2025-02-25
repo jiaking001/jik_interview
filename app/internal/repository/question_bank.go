@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// QuestionBankRepository 定义了一个问题库仓库接口
 type QuestionBankRepository interface {
 	GetQuestionBank(ctx context.Context, req *v1.QuestionBankRequest) ([]model.QuestionBank, int, error)
 	GetByTitle(ctx context.Context, title string) (*model.QuestionBank, error)
@@ -19,6 +20,7 @@ type QuestionBankRepository interface {
 	Update(ctx context.Context, bank *model.QuestionBank) error
 }
 
+// NewQuestionBankRepository 创建一个新的问题库仓库实例
 func NewQuestionBankRepository(
 	repository *Repository,
 ) QuestionBankRepository {
@@ -27,10 +29,12 @@ func NewQuestionBankRepository(
 	}
 }
 
+// questionBankRepository 实现了问题库仓库接口
 type questionBankRepository struct {
 	*Repository
 }
 
+// Update 更新问题库
 func (r *questionBankRepository) Update(ctx context.Context, bank *model.QuestionBank) error {
 	if err := r.DB(ctx).Save(bank).Error; err != nil {
 		return err
@@ -38,6 +42,7 @@ func (r *questionBankRepository) Update(ctx context.Context, bank *model.Questio
 	return nil
 }
 
+// DeleteById 删除指定ID的问题库
 func (r *questionBankRepository) DeleteById(ctx context.Context, bank *model.QuestionBank, id uint64) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -63,6 +68,7 @@ func (r *questionBankRepository) DeleteById(ctx context.Context, bank *model.Que
 	return nil
 }
 
+// GetByID 根据ID获取问题库
 func (r *questionBankRepository) GetByID(ctx context.Context, id uint64) (*model.QuestionBank, error) {
 	var bank model.QuestionBank
 	if err := r.DB(ctx).Where("id = ?", id).First(&bank).Error; err != nil {
@@ -74,6 +80,7 @@ func (r *questionBankRepository) GetByID(ctx context.Context, id uint64) (*model
 	return &bank, nil
 }
 
+// GetCount 获取问题库总数
 func (r *questionBankRepository) GetCount(ctx context.Context) (int, error) {
 	var total int64
 	var questionBank model.QuestionBank
@@ -83,6 +90,7 @@ func (r *questionBankRepository) GetCount(ctx context.Context) (int, error) {
 	return int(total), nil
 }
 
+// Create 创建问题库
 func (r *questionBankRepository) Create(ctx context.Context, bank *model.QuestionBank) error {
 	if err := r.DB(ctx).Create(bank).Error; err != nil {
 		return err
@@ -90,6 +98,7 @@ func (r *questionBankRepository) Create(ctx context.Context, bank *model.Questio
 	return nil
 }
 
+// GetByTitle 根据标题获取问题库
 func (r *questionBankRepository) GetByTitle(ctx context.Context, title string) (*model.QuestionBank, error) {
 	var questionBank model.QuestionBank
 	if err := r.DB(ctx).Where("title = ?", title).First(&questionBank).Error; err != nil {
@@ -101,6 +110,7 @@ func (r *questionBankRepository) GetByTitle(ctx context.Context, title string) (
 	return &questionBank, nil
 }
 
+// GetQuestionBank 根据请求参数获取问题库列表
 func (r *questionBankRepository) GetQuestionBank(ctx context.Context, req *v1.QuestionBankRequest) ([]model.QuestionBank, int, error) {
 	var questionBanks []model.QuestionBank
 	var total int64

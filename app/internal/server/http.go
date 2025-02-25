@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 	hp "net/http"
 )
 
@@ -24,6 +25,7 @@ func NewHTTPServer(
 	conf *viper.Viper,
 	jwt *jwt.JWT,
 	rdb *redis.Client,
+	db *gorm.DB,
 	userHandler *handler.UserHandler,
 	questionHandler *handler.QuestionHandler,
 	questionBankHandler *handler.QuestionBankHandler,
@@ -83,7 +85,7 @@ func NewHTTPServer(
 			user.POST("/add", userHandler.AddUser)
 			user.POST("/delete", userHandler.DeleteUser)
 			user.POST("/update", userHandler.UpdateUser)
-			user.POST("/add/sign_in", middleware.GetLoginStatus(jwt, rdb), userHandler.AddUserSignIn)
+			user.POST("/add/sign_in", middleware.GetLoginStatus(jwt, rdb), middleware.AntiCrawling(jwt, rdb, db), userHandler.AddUserSignIn)
 			user.GET("/get/sign_in", middleware.GetLoginStatus(jwt, rdb), userHandler.GetUserSignIn)
 
 			// 题库模块

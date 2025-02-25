@@ -84,6 +84,8 @@ func GetDeviceType(userAgent string) string {
 	ua := useragent.New(userAgent)
 	if ua.Mobile() {
 		return "mobile"
+	} else if ua.Bot() {
+		return "bot"
 	} else {
 		return "pc"
 	}

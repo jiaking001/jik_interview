@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// UserService 用户服务接口
 type UserService interface {
 	Register(ctx context.Context, req *v1.RegisterRequest) error
 	Login(ctx context.Context, req *v1.LoginRequest, userAgent string) (string, *model.User, error)
@@ -28,6 +29,7 @@ type UserService interface {
 	Logout(ctx context.Context, token string, userAgent string) (bool, error)
 }
 
+// NewUserService 创建用户服务
 func NewUserService(
 	service *Service,
 	userRepo repository.UserRepository,
@@ -38,11 +40,13 @@ func NewUserService(
 	}
 }
 
+// userService 用户服务结构体
 type userService struct {
 	userRepo repository.UserRepository
 	*Service
 }
 
+// Logout 用户登出
 func (s *userService) Logout(ctx context.Context, token string, userAgent string) (bool, error) {
 	// 解析 token
 	claims, err := s.jwt.ParseToken(token)
@@ -57,6 +61,7 @@ func (s *userService) Logout(ctx context.Context, token string, userAgent string
 	return true, nil
 }
 
+// GetUserSignIn 获取用户签到记录
 func (s *userService) GetUserSignIn(ctx context.Context, token string, year int) ([]int, error) {
 	// 解析 token
 	claims, err := s.jwt.ParseToken(token)
@@ -88,6 +93,7 @@ func (s *userService) GetUserSignIn(ctx context.Context, token string, year int)
 	return dayList, nil
 }
 
+// AddUserSignIn 添加用户签到记录
 func (s *userService) AddUserSignIn(ctx context.Context, token string) (bool, error) {
 	// 解析 token
 	claims, err := s.jwt.ParseToken(token)
@@ -105,6 +111,7 @@ func (s *userService) AddUserSignIn(ctx context.Context, token string) (bool, er
 	return true, nil
 }
 
+// UpdateUser 更新用户信息
 func (s *userService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest) (bool, error) {
 	if req == nil || req.Id == "" {
 		return false, v1.ParamsError
@@ -142,6 +149,7 @@ func (s *userService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	return true, nil
 }
 
+// DeleteUser 删除用户
 func (s *userService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (bool, error) {
 	if req.Id <= "0" {
 		return false, v1.ParamsError
@@ -165,6 +173,7 @@ func (s *userService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest)
 	return true, nil
 }
 
+// AddUser 添加用户
 func (s *userService) AddUser(ctx context.Context, req *v1.AddUserRequest) (uint64, error) {
 	if req.UserAccount == nil {
 		return 0, v1.ErrIllegalAccount
@@ -208,6 +217,7 @@ func (s *userService) AddUser(ctx context.Context, req *v1.AddUserRequest) (uint
 	return u.ID, nil
 }
 
+// ListUserByPage 分页获取用户列表
 func (s *userService) ListUserByPage(ctx context.Context, req *v1.UserQueryRequest) (v1.PageResult[v1.User], error) {
 	current := req.Current
 	size := req.PageSize
@@ -324,6 +334,11 @@ func (s *userService) Login(ctx context.Context, req *v1.LoginRequest, userAgent
 		return "", nil, v1.ErrPassword
 	}
 
+	// 禁止被封禁的用户登录
+	if user.UserRole == "ban" {
+		return "", nil, v1.ErrBanRole
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.UserPassword), []byte(req.UserPassword))
 	if err != nil {
 		return "", nil, v1.ErrPassword
@@ -345,6 +360,10 @@ func (s *userService) Login(ctx context.Context, req *v1.LoginRequest, userAgent
 
 	// 解析 User-Agent
 	deviceType := utils.GetDeviceType(userAgent)
+	// 防止爬虫用户登录
+	if deviceType == "bot" {
+		return "", nil, v1.ErrBotLogin
+	}
 	// 检查当前设备类型是否已经登录
 	oldToken, err := s.userRepo.GetTokenByDevice(ctx, user.ID, deviceType)
 	if err != nil && !errors.Is(err, redis.Nil) {

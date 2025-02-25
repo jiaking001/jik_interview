@@ -16,21 +16,35 @@ import (
 	"time"
 )
 
+// QuestionRepository 定义了一个问题仓库接口
 type QuestionRepository interface {
+	// 向ES中添加数据
 	AddDataToEs(ctx context.Context, data []model.QuestionEs) error
+	// 获取所有问题
 	GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error)
+	// 根据请求获取问题
 	GetQuestion(ctx context.Context, req *v1.QuestionRequest) ([]model.Question, int, error)
+	// 获取问题总数
 	GetCount(ctx context.Context) (int, error)
+	// 创建问题
 	Create(ctx context.Context, question *model.Question) error
+	// 根据标题获取问题
 	GetByTitle(ctx context.Context, title string) (*model.Question, error)
+	// 根据ID获取问题
 	GetByID(ctx context.Context, id uint64) (*model.Question, error)
+	// 根据ID删除问题
 	DeleteById(ctx context.Context, question *model.Question, id uint64) error
+	// 更新问题
 	Update(ctx context.Context, question *model.Question) error
+	// 根据题库ID获取问题
 	GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error)
+	// 根据请求获取ES中的问题
 	GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error)
+	// 批量删除问题
 	DeleteBatchQuestion(ctx context.Context, questions []string) error
 }
 
+// NewQuestionRepository 创建一个问题仓库实例
 func NewQuestionRepository(
 	repository *Repository,
 ) QuestionRepository {
@@ -39,10 +53,12 @@ func NewQuestionRepository(
 	}
 }
 
+// questionRepository 实现了QuestionRepository接口
 type questionRepository struct {
 	*Repository
 }
 
+// DeleteBatchQuestion 批量删除问题
 func (r *questionRepository) DeleteBatchQuestion(ctx context.Context, questions []string) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -76,6 +92,7 @@ func (r *questionRepository) DeleteBatchQuestion(ctx context.Context, questions 
 	return nil
 }
 
+// GetEsQuestion 根据请求获取ES中的问题
 func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.QuestionRequest) ([]v1.Question, int, error) {
 	var buf bytes.Buffer
 	query := map[string]interface{}{
@@ -231,6 +248,7 @@ func (r *questionRepository) GetEsQuestion(ctx context.Context, req *v1.Question
 	return questions, total, nil
 }
 
+// AddDataToEs 向ES中添加数据
 func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.QuestionEs) error {
 	for _, question := range data {
 		body := map[string]interface{}{
@@ -253,6 +271,7 @@ func (r *questionRepository) AddDataToEs(ctx context.Context, data []model.Quest
 	return nil
 }
 
+// GetAllQuestion 获取所有问题
 func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time) ([]model.Question, error) {
 	var questions []model.Question
 	if err := r.DB(ctx).Unscoped().Where("update_time >= ?", time).Find(&questions).Error; err != nil {
@@ -261,6 +280,7 @@ func (r *questionRepository) GetAllQuestion(ctx context.Context, time time.Time)
 	return questions, nil
 }
 
+// GetQuestionByBankId 根据题库ID获取问题
 func (r *questionRepository) GetQuestionByBankId(ctx context.Context, bankId uint64) ([]model.Question, int64, error) {
 	var questions []model.Question
 	var total int64
@@ -272,6 +292,7 @@ func (r *questionRepository) GetQuestionByBankId(ctx context.Context, bankId uin
 	return questions, total, nil
 }
 
+// Update 更新问题
 func (r *questionRepository) Update(ctx context.Context, question *model.Question) error {
 	if err := r.DB(ctx).Save(question).Error; err != nil {
 		return err
@@ -279,6 +300,7 @@ func (r *questionRepository) Update(ctx context.Context, question *model.Questio
 	return nil
 }
 
+// DeleteById 根据ID删除问题
 func (r *questionRepository) DeleteById(ctx context.Context, question *model.Question, id uint64) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -304,6 +326,7 @@ func (r *questionRepository) DeleteById(ctx context.Context, question *model.Que
 	return nil
 }
 
+// GetByID 根据ID获取问题
 func (r *questionRepository) GetByID(ctx context.Context, id uint64) (*model.Question, error) {
 	var question model.Question
 	if err := r.DB(ctx).Where("id = ?", id).First(&question).Error; err != nil {
@@ -315,6 +338,7 @@ func (r *questionRepository) GetByID(ctx context.Context, id uint64) (*model.Que
 	return &question, nil
 }
 
+// GetByTitle 根据标题获取问题
 func (r *questionRepository) GetByTitle(ctx context.Context, title string) (*model.Question, error) {
 	var question model.Question
 	if err := r.DB(ctx).Where("title = ?", title).First(&question).Error; err != nil {
@@ -326,6 +350,7 @@ func (r *questionRepository) GetByTitle(ctx context.Context, title string) (*mod
 	return &question, nil
 }
 
+// Create 创建问题
 func (r *questionRepository) Create(ctx context.Context, question *model.Question) error {
 	if err := r.DB(ctx).Create(question).Error; err != nil {
 		return err
@@ -333,6 +358,7 @@ func (r *questionRepository) Create(ctx context.Context, question *model.Questio
 	return nil
 }
 
+// GetCount 获取问题总数
 func (r *questionRepository) GetCount(ctx context.Context) (int, error) {
 	var total int64
 	var question model.Question
@@ -342,6 +368,7 @@ func (r *questionRepository) GetCount(ctx context.Context) (int, error) {
 	return int(total), nil
 }
 
+// GetQuestion 根据请求获取问题
 func (r *questionRepository) GetQuestion(ctx context.Context, req *v1.QuestionRequest) ([]model.Question, int, error) {
 	var questions []model.Question
 	var total int64

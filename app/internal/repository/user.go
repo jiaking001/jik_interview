@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// UserRepository 用户仓库接口
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
@@ -27,6 +28,7 @@ type UserRepository interface {
 	DeleteTokenByDevice(ctx context.Context, id uint64, deviceType string) error
 }
 
+// NewUserRepository 创建用户仓库实例
 func NewUserRepository(
 	r *Repository,
 ) UserRepository {
@@ -35,10 +37,12 @@ func NewUserRepository(
 	}
 }
 
+// userRepository 用户仓库结构体
 type userRepository struct {
 	*Repository
 }
 
+// DeleteTokenByDevice 删除用户登录端的Token
 func (r *userRepository) DeleteTokenByDevice(ctx context.Context, id uint64, deviceType string) error {
 	idStr := utils.Uint64TOString(id)
 	if err := r.rdb.HDel(ctx, "user_tokens:"+idStr, deviceType).Err(); err != nil {
@@ -47,6 +51,7 @@ func (r *userRepository) DeleteTokenByDevice(ctx context.Context, id uint64, dev
 	return nil
 }
 
+// AddTokenByDevice 添加用户登录端的Token
 func (r *userRepository) AddTokenByDevice(ctx context.Context, id uint64, deviceType string, token string) error {
 	idStr := utils.Uint64TOString(id)
 	if err := r.rdb.HSet(ctx, "user_tokens:"+idStr, deviceType, token).Err(); err != nil {
@@ -65,6 +70,7 @@ func (r *userRepository) GetTokenByDevice(ctx context.Context, id uint64, device
 	return r.rdb.HGet(ctx, "user_tokens:"+idStr, deviceType).Result()
 }
 
+// GetUserSignIn 获取用户登录信息
 func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]byte, error) {
 	bytes, err := r.rdb.Get(ctx, key).Bytes()
 	if errors.Is(err, redis.Nil) {
@@ -76,10 +82,12 @@ func (r *userRepository) GetUserSignIn(ctx context.Context, key string) ([]byte,
 	return bytes, nil
 }
 
+// AddUserSignIn 添加用户登录信息
 func (r *userRepository) AddUserSignIn(ctx context.Context, key string, offset int64) error {
 	return r.rdb.SetBit(ctx, key, offset, 1).Err()
 }
 
+// GetCount 获取用户总数
 func (r *userRepository) GetCount(ctx context.Context) (int, error) {
 	var total int64
 	var user model.User
@@ -89,6 +97,7 @@ func (r *userRepository) GetCount(ctx context.Context) (int, error) {
 	return int(total), nil
 }
 
+// DeleteById 删除用户
 func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id uint64) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -109,6 +118,7 @@ func (r *userRepository) DeleteById(ctx context.Context, user *model.User, id ui
 	return nil
 }
 
+// GetUser 获取用户列表
 func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) ([]*model.User, int, error) {
 	var users []*model.User
 	var total int64
@@ -169,6 +179,7 @@ func (r *userRepository) GetUser(ctx context.Context, req *v1.UserQueryRequest) 
 	return users, int(total), nil
 }
 
+// Create 创建用户
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	if err := r.DB(ctx).Create(user).Error; err != nil {
 		return err
@@ -176,6 +187,7 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	return nil
 }
 
+// Update 更新用户
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	if err := r.DB(ctx).Save(user).Error; err != nil {
 		return err
@@ -183,6 +195,7 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	return nil
 }
 
+// GetByID 根据ID获取用户
 func (r *userRepository) GetByID(ctx context.Context, userId uint64) (*model.User, error) {
 	var user model.User
 	if err := r.DB(ctx).Where("id = ?", userId).First(&user).Error; err != nil {
@@ -194,6 +207,7 @@ func (r *userRepository) GetByID(ctx context.Context, userId uint64) (*model.Use
 	return &user, nil
 }
 
+// GetByAccount 根据账号获取用户
 func (r *userRepository) GetByAccount(ctx context.Context, account string) (*model.User, error) {
 	var user model.User
 	if err := r.DB(ctx).Where("user_account = ?", account).First(&user).Error; err != nil {

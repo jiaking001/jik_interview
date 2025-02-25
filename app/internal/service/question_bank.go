@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// QuestionBankService 定义一个接口，用于定义问题库服务的方法
 type QuestionBankService interface {
 	ListBankByPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankQueryResponseData[v1.QuestionBank], error)
 	AddQuestionBank(ctx context.Context, req *v1.AddQuestionBankRequest) (string, error)
@@ -17,6 +18,7 @@ type QuestionBankService interface {
 	ListBankByVOPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankVO, error)
 }
 
+// NewQuestionBankService 实现问题库服务接口
 func NewQuestionBankService(
 	service *Service,
 	questionBankRepository repository.QuestionBankRepository,
@@ -32,6 +34,7 @@ type questionBankService struct {
 	questionBankRepository repository.QuestionBankRepository
 }
 
+// ListBankByVOPage 根据分页请求获取问题库列表
 func (s *questionBankService) ListBankByVOPage(ctx context.Context, req *v1.QuestionBankRequest) (v1.QuestionBankVO, error) {
 	if req.ID == nil || *req.ID == "" {
 		return v1.QuestionBankVO{}, v1.ParamsError
@@ -57,6 +60,7 @@ func (s *questionBankService) ListBankByVOPage(ctx context.Context, req *v1.Ques
 	}, nil
 }
 
+// GetQuestionBankById 根据ID获取问题库
 func (s *questionBankService) GetQuestionBankById(ctx context.Context, req *v1.GetQuestionBankRequest) (v1.GetQuestionBankResponse, error) {
 	if req == nil || *req.ID == "" {
 		return v1.GetQuestionBankResponse{}, v1.ParamsError

@@ -17,9 +17,12 @@ var (
 	ErrPassword              = newError(40000, "账号或密码错误")
 	ParamsError              = newError(40000, "请求参数错误")
 	NotLoginError            = newError(40100, "未登录")
+	ErrBanRole               = newError(40000, "账号因违规行为已被封禁")
 
 	// questionBank
 	ErrTitleAlreadyUse = newError(40000, "题库或题目已存在")
 
 	ErrSystemIsBusy = newError(40000, "系统繁忙,请稍后再试")
+
+	ErrBotLogin = newError(40000, "爬虫用户，拒绝访问")
 )

@@ -5,6 +5,7 @@ import (
 	"context"
 )
 
+// QuestionBankQuestionRepository 定义了一个问题库问题的仓库接口
 type QuestionBankQuestionRepository interface {
 	GetQuestionBankQuestion(ctx context.Context, id uint64, flag int) ([]model.QuestionBankQuestion, error)
 	AddQuestionBankQuestion(ctx context.Context, id uint64, id2 uint64) error
@@ -14,6 +15,7 @@ type QuestionBankQuestionRepository interface {
 	BatchRemoveQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error
 }
 
+// NewQuestionBankQuestionRepository 创建一个新的问题库问题仓库
 func NewQuestionBankQuestionRepository(
 	repository *Repository,
 ) QuestionBankQuestionRepository {
@@ -22,10 +24,12 @@ func NewQuestionBankQuestionRepository(
 	}
 }
 
+// questionBankQuestionRepository 定义了一个问题库问题仓库的结构体
 type questionBankQuestionRepository struct {
 	*Repository
 }
 
+// BatchRemoveQuestionBankQuestion 批量删除问题库问题
 func (r *questionBankQuestionRepository) BatchRemoveQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -48,6 +52,7 @@ func (r *questionBankQuestionRepository) BatchRemoveQuestionBankQuestion(ctx con
 	return nil
 }
 
+// BatchAddQuestionBankQuestion 批量添加问题库问题
 func (r *questionBankQuestionRepository) BatchAddQuestionBankQuestion(ctx context.Context, question []model.QuestionBankQuestion) error {
 	tx := r.DB(ctx).Begin()
 	defer func() {
@@ -65,6 +70,7 @@ func (r *questionBankQuestionRepository) BatchAddQuestionBankQuestion(ctx contex
 	return nil
 }
 
+// RemoveQuestionBankQuestion 删除问题库问题
 func (r *questionBankQuestionRepository) RemoveQuestionBankQuestion(ctx context.Context, id uint64, id2 uint64) (bool, error) {
 	var questionBankQuestion model.QuestionBankQuestion
 	if err := r.DB(ctx).Where("question_id = ? and question_bank_id = ?", id, id2).Delete(&questionBankQuestion).Error; err != nil {
@@ -73,6 +79,7 @@ func (r *questionBankQuestionRepository) RemoveQuestionBankQuestion(ctx context.
 	return true, nil
 }
 
+// GetQuestionBankQuestionId 获取问题库问题的ID
 func (r *questionBankQuestionRepository) GetQuestionBankQuestionId(ctx context.Context, id uint64, id2 uint64) (uint64, error) {
 	var questionBankQuestion model.QuestionBankQuestion
 	if err := r.DB(ctx).Where("question_id = ? and question_bank_id = ?", id, id2).Find(&questionBankQuestion).Error; err != nil {
@@ -81,6 +88,7 @@ func (r *questionBankQuestionRepository) GetQuestionBankQuestionId(ctx context.C
 	return questionBankQuestion.ID, nil
 }
 
+// AddQuestionBankQuestion 添加问题库问题
 func (r *questionBankQuestionRepository) AddQuestionBankQuestion(ctx context.Context, id uint64, id2 uint64) error {
 	questionBankQuestion := model.QuestionBankQuestion{
 		QuestionID:     id,

@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// QuestionBankQuestionService 定义了题目题库服务接口
 type QuestionBankQuestionService interface {
 	ListQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionQueryRequest) (v1.PageQuestionBankQuestionVO, error)
 	AddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (string, error)
@@ -17,6 +18,7 @@ type QuestionBankQuestionService interface {
 	BatchRemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRemoveRequest) (bool, error)
 }
 
+// NewQuestionBankQuestionService 创建题目题库服务实例
 func NewQuestionBankQuestionService(
 	service *Service,
 	questionBankQuestionRepository repository.QuestionBankQuestionRepository,
@@ -27,11 +29,13 @@ func NewQuestionBankQuestionService(
 	}
 }
 
+// questionBankQuestionService 题目题库服务结构体
 type questionBankQuestionService struct {
 	*Service
 	questionBankQuestionRepository repository.QuestionBankQuestionRepository
 }
 
+// BatchRemoveQuestionBankQuestion 批量移除题目题库关系
 func (s *questionBankQuestionService) BatchRemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRemoveRequest) (bool, error) {
 	// 判断参数是否合法
 	if req.QuestionBankID == nil || req.QuestionIDList == nil || len(req.QuestionIDList) == 0 {
@@ -59,6 +63,7 @@ func (s *questionBankQuestionService) BatchRemoveQuestionBankQuestion(ctx contex
 	return true, nil
 }
 
+// BatchAddQuestionBankQuestion 批量添加题目题库关系
 func (s *questionBankQuestionService) BatchAddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionBatchRequest) (bool, error) {
 	// 获取题库中已存在的题目
 	var questionExistList = make(map[uint64]bool)
@@ -101,6 +106,7 @@ func (s *questionBankQuestionService) BatchAddQuestionBankQuestion(ctx context.C
 	return true, nil
 }
 
+// RemoveQuestionBankQuestion 移除题目题库关系
 func (s *questionBankQuestionService) RemoveQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (bool, error) {
 	questionID, err := strconv.ParseUint(*req.QuestionID, 10, 64)
 	questionBankID, err := strconv.ParseUint(*req.QuestionBankID, 10, 64)
@@ -114,6 +120,7 @@ func (s *questionBankQuestionService) RemoveQuestionBankQuestion(ctx context.Con
 	return ok, nil
 }
 
+// AddQuestionBankQuestion 添加题目题库关系
 func (s *questionBankQuestionService) AddQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionRequest) (string, error) {
 	questionID, err := strconv.ParseUint(*req.QuestionID, 10, 64)
 	questionBankID, err := strconv.ParseUint(*req.QuestionBankID, 10, 64)
@@ -131,6 +138,7 @@ func (s *questionBankQuestionService) AddQuestionBankQuestion(ctx context.Contex
 	return strconv.FormatUint(id, 10), err
 }
 
+// ListQuestionBankQuestion 获取题目题库列表
 func (s *questionBankQuestionService) ListQuestionBankQuestion(ctx context.Context, req *v1.QuestionBankQuestionQueryRequest) (v1.PageQuestionBankQuestionVO, error) {
 	switch {
 	// TODO

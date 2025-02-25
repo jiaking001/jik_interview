@@ -9,18 +9,29 @@ import (
 	"strconv"
 )
 
+// QuestionService 定义了一个问题服务的接口
 type QuestionService interface {
+	// 根据页码获取问题列表
 	ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error)
+	// 添加问题
 	AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error)
+	// 删除问题
 	DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error)
+	// 更新问题
 	UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error)
+	// 根据题库ID获取问题列表
 	ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error)
+	// 根据问题ID获取问题
 	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
+	// 根据页码获取问题列表（VO）
 	ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
+	// 根据页码和关键词搜索问题列表（VO）
 	SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
+	// 批量删除问题
 	DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error)
 }
 
+// NewQuestionService 创建一个新的问题服务实例
 func NewQuestionService(
 	service *Service,
 	questionRepository repository.QuestionRepository,
@@ -31,11 +42,13 @@ func NewQuestionService(
 	}
 }
 
+// questionService 实现了QuestionService接口
 type questionService struct {
 	*Service
 	questionRepository repository.QuestionRepository
 }
 
+// DeleteBatchQuestion 批量删除问题
 func (s *questionService) DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error) {
 	// 检验参数的合法性
 	if len(req.QuestionIdList) == 0 {
@@ -48,6 +61,7 @@ func (s *questionService) DeleteBatchQuestion(ctx context.Context, req *v1.Batch
 	return true, nil
 }
 
+// SearchQuestionVoByPage 根据页码和关键词搜索问题列表（VO）
 func (s *questionService) SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {
 	current := req.Current
 	size := req.PageSize
@@ -90,6 +104,7 @@ func (s *questionService) SearchQuestionVoByPage(ctx context.Context, req *v1.Qu
 
 }
 
+// ListQuestionVoByPage 根据页码获取问题列表（VO）
 func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error) {
 	current := req.Current
 	size := req.PageSize
@@ -132,6 +147,7 @@ func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.Ques
 	}, nil
 }
 
+// GetQuestionById 根据问题ID获取问题
 func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error) {
 	if req.ID == nil || *req.ID == "" {
 		return v1.QuestionVO{}, v1.ParamsError
@@ -164,6 +180,7 @@ func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuesti
 	}, nil
 }
 
+// ListQuestionByBankId 根据题库ID获取问题列表
 func (s *questionService) ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error) {
 	questions, total, err := s.questionRepository.GetQuestionByBankId(ctx, bankId)
 	if err != nil {
@@ -200,6 +217,7 @@ func (s *questionService) ListQuestionByBankId(ctx context.Context, bankId uint6
 	}, nil
 }
 
+// UpdateQuestion 更新问题
 func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQuestionRequest) (bool, error) {
 	if req == nil || *req.ID == "" {
 		return false, v1.ParamsError
@@ -238,6 +256,7 @@ func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQues
 	return true, nil
 }
 
+// DeleteQuestion 删除问题
 func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error) {
 	if req.Id <= "0" {
 		return false, v1.ParamsError
@@ -261,6 +280,7 @@ func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQues
 	return true, nil
 }
 
+// AddQuestion 添加问题
 func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error) {
 	if *req.Title == "" {
 		return "", v1.ErrIllegalAccount
@@ -295,6 +315,7 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 	return strconv.FormatUint(q.ID, 10), nil
 }
 
+// ListQuestionByPage 根据页码获取问题列表
 func (s *questionService) ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error) {
 	current := req.Current
 	size := req.PageSize
