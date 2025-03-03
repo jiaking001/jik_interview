@@ -34,25 +34,3 @@
 查看题目列表 (限流，熔断，反爬虫)
 
 （管理员）查看题目列表，添加题目，删除题目，修改题目，批量删除题目，批量添加删除题目题库关系
-
-## 项目效果
-
-### 主页
-
-![image-20250228161228724](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\image-20250228161228724.png)
-
-### 题库
-
-![image-20250228161256025](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\image-20250228161256025.png)
-
-### 用户管理
-
-![image-20250303151807168](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\image-20250303151807168.png)
-
-### 题库管理
-
-![image-20250303151829238](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\image-20250303151829238.png)
-
-### 题目管理
-
-![image-20250303151914796](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\image-20250303151914796.png)
