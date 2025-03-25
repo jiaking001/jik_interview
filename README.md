@@ -2,7 +2,7 @@
 
 ## 项目介绍
 
-​	基于 **Nunu** + **Redis** + **Elasticsearch** 的面试刷题平台；管理员可创建并批量管理题目；用户可 **分词检索** 题目，在线刷题并查看刷题日历；项目基于 **Sentinel Go** ， **Nacos** 等全面优化性能和安全性。基于 Nginx + Linux 管理面板将项目部署上线。
+​	基于 **Nunu** + **Redis** + **Elasticsearch** 的面试知识库；管理员可创建并批量管理题目；用户可 **分词检索** 题目，在线刷题并查看刷题日历；项目基于 **Sentinel Go** ， **Nacos** 等全面优化性能和安全性。基于 Nginx + Linux 管理面板将项目部署上线。
 
 项目地址：jiaking.top
 
