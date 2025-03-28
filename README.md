@@ -11,7 +11,7 @@
 - Nunu 框架
 - MySQL 数据库 + GORM +Redis
 - Elasticsearch 搜索引擎
-- Sentinel Go 流量控制
+- Sentinel 流量控制
 - Nacos 配置中心
 - 多角度项目优化：性能、安全性、可用性
 
