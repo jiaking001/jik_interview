@@ -12,7 +12,7 @@ export default function GlobalFooter() {
         <div
             className="global-footer"
         >
-            <div>© {currentYear} 面试刷题平台</div>
+            <div>© {currentYear} 面试知识库</div>
             <div>
                 <a href="https://github.com/jiaking001" target="_blank">
                     by JiaKing

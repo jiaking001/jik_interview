@@ -26,7 +26,7 @@ const AccessLayout: React.FC<
     if (!canAccess) {
         return <Forbidden/>;
     }
-    return <>{children} < />;
+    return <>{children} </>;
 };
 
 export default AccessLayout;

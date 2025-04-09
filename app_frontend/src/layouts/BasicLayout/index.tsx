@@ -57,7 +57,7 @@ export default function BasicLayout({children}: Props) {
             }}
         >
             <ProLayout
-                title="面试刷题平台"
+                title="面试知识库"
                 layout="top"
                 logo={
                     <Image

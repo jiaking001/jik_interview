@@ -40,7 +40,7 @@ const UserRegisterPage: React.FC = (props) => {
             <LoginForm<API.UserAddRequest>
                 form={form}
                 title="用户注册"
-                subTitle="面试刷题网站"
+                subTitle="面试知识库"
                 onFinish={doSubmit}
                 submitter={{
                     searchConfig: {
