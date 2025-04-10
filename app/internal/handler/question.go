@@ -2,7 +2,6 @@ package handler
 
 import (
 	v1 "app/api/v1"
-	"app/internal/model"
 	"app/internal/service"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -49,23 +48,20 @@ func (h *QuestionHandler) ListPage(ctx *gin.Context) {
 
 func (h *QuestionHandler) AddQuestion(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-	userInterface := session.Get("user_login")
-	if userInterface == nil {
+	t := session.Get("user_login")
+	if t == nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
 		return
 	}
-	user := userInterface.(*model.User)
-	if user == nil {
-		v1.HandleError(ctx, http.StatusUnauthorized, v1.ErrUnauthorized, nil)
-		return
-	}
+	token := t.(string)
+
 	var req v1.AddQuestionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
 		return
 	}
 
-	id, err := h.questionService.AddQuestion(ctx, &req, user.ID)
+	id, err := h.questionService.AddQuestion(ctx, &req, token)
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return

@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/internal/middleware"
+	"app/pkg/rabbmit"
 	"context"
 	"flag"
 	"fmt"
@@ -32,6 +33,8 @@ func main() {
 	middleware.InitSentinel()
 	// 初始化黑名单
 	middleware.BlackFilter()
+	// 初始化 Rabbitmq
+	rabbmit.InitRabbitMQ()
 
 	var envConf = flag.String("conf", "config/local.yml", "config path, eg: -conf ./config/local.yml")
 	flag.Parse()

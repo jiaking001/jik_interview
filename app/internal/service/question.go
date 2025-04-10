@@ -14,7 +14,7 @@ type QuestionService interface {
 	// 根据页码获取问题列表
 	ListQuestionByPage(ctx context.Context, req *v1.QuestionRequest) (v1.QuestionQueryResponseData[v1.Question], error)
 	// 添加问题
-	AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error)
+	AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error)
 	// 删除问题
 	DeleteQuestion(ctx context.Context, req *v1.DeleteQuestionRequest) (bool, error)
 	// 更新问题
@@ -281,7 +281,13 @@ func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQues
 }
 
 // AddQuestion 添加问题
-func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, id uint64) (string, error) {
+func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error) {
+	// 解析 token
+	claims, err := s.jwt.ParseToken(token)
+	if err != nil {
+		return "", err
+	}
+
 	if *req.Title == "" {
 		return "", v1.ErrIllegalAccount
 	}
@@ -301,7 +307,7 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 		Content: req.Content,
 		Tags:    &tags,
 		Title:   req.Title,
-		UserID:  id,
+		UserID:  claims.User.ID,
 	}
 	err = s.questionRepository.Create(ctx, questionBank)
 	if err != nil {

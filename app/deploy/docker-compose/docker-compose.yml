@@ -66,9 +66,25 @@ services:
     networks:
       - nacos-network
 
+
+  rabbitmq:
+    image: rabbitmq:3-management  # 使用带有管理界面的 RabbitMQ 镜像
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ 服务端口
+      - "15672:15672"  # RabbitMQ 管理界面端口
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # 数据卷，用于持久化数据
+    environment:
+      RABBITMQ_DEFAULT_USER: jiaking  # 默认用户名
+      RABBITMQ_DEFAULT_PASS: 123456  # 默认密码
+      RABBITMQ_DEFAULT_VHOST: /     # 默认虚拟主机
+    restart: unless-stopped
+
 volumes:
   esdata:
     driver: local
+  rabbitmq_data:
 
 networks:
   elastic:

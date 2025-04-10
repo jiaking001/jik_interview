@@ -4,7 +4,7 @@ const DEV = "http://localhost:8101"
 const PROD = "https://jiaking.top"
 // 创建 Axios 示例
 const myAxios = axios.create({
-    baseURL: PROD,
+    baseURL: DEV,
     timeout: 10000,
     withCredentials: true,
 });

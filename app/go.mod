@@ -25,6 +25,7 @@ require (
 	github.com/sentinel-group/sentinel-go-adapters v1.0.1
 	github.com/sony/sonyflake v1.1.0
 	github.com/spf13/viper v1.16.0
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
