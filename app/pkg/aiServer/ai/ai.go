@@ -2,7 +2,6 @@ package ai
 
 import (
 	"context"
-	"github.com/joho/godotenv"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/volcengine"
@@ -14,7 +13,7 @@ import (
 const DEFAULT_MODEL = "deepseek-v3-250324"
 
 func DoChat(systemPrompt string, userPrompt string, opt ...string) string {
-	_ = godotenv.Load(".env")
+	// _ = godotenv.Load(".env")
 	// 请确保您已将 API Key 存储在环境变量 ARK_API_KEY 中
 	// 初始化Ark客户端，从环境变量中读取您的API Key
 	client := arkruntime.NewClientWithApiKey(

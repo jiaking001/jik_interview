@@ -4,9 +4,12 @@ import (
 	v1 "app/api/v1"
 	"app/internal/model"
 	"app/internal/repository"
+	"app/pkg/aiServer/ai"
 	"app/pkg/utils"
 	"context"
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 // QuestionService 定义了一个问题服务的接口
@@ -30,7 +33,7 @@ type QuestionService interface {
 	// 批量删除问题
 	DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error)
 	// 通过 AI 生成题目
-	AddQuestionByAI(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error)
+	AddQuestionByAI(ctx context.Context, req *v1.AddQuestionByAIRequest, token string) (bool, error)
 }
 
 // NewQuestionService 创建一个新的问题服务实例
@@ -50,13 +53,52 @@ type questionService struct {
 	questionRepository repository.QuestionRepository
 }
 
-func (s *questionService) AddQuestionByAI(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error) {
-	// 将生成的题目添加到数据库
-	questionId, err := s.AddQuestion(ctx, req, token)
-	if err != nil {
-		return "", err
+func (s *questionService) AddQuestionByAI(ctx context.Context, req *v1.AddQuestionByAIRequest, token string) (bool, error) {
+	// 1.定义系统 Prompt
+	systemPrompt := "你是一位专业的程序员面试官，你要帮我生成 {数量} 道 {方向} 面试题，要求输出格式如下：\n" +
+		"\n" +
+		"1. 什么是 Java 中的反射？\n" +
+		"2. Java 8 中的 Stream API 有什么作用？\n" +
+		"3. xxxxxx\n" +
+		"\n" +
+		"除此之外，请不要输出任何多余的内容，不要输出开头、也不要输出结尾，只输出上面的列表。\n" +
+		"\n" +
+		"接下来我会给你要生成的题目{数量}、以及题目{方向}\n"
+	// 2.定义用户 Prompt
+	userPrompt := fmt.Sprintf("数量：%d\n方向：%s\n", req.Number, req.Direction)
+	// 3.调用 AI 生成题目
+	questions := ai.DoChat(systemPrompt, userPrompt)
+	// 4.对题目进行预处理
+	lines := strings.Split(questions, "\n")
+	var result []string
+
+	for _, line := range lines {
+		// 移除序号
+		parts := strings.SplitN(line, ". ", 2)
+		if len(parts) > 1 {
+			cleaned := parts[1]
+			// 删除所有的 `
+			cleaned = strings.ReplaceAll(cleaned, "`", "")
+			// 去除首尾空格
+			cleaned = strings.TrimSpace(cleaned)
+			result = append(result, cleaned)
+		}
 	}
-	return questionId, nil
+	// 5.将生成的题目添加到数据库
+	tags := make([]string, 0)
+	tags = append(tags, req.Direction)
+	for _, question := range result {
+		var request = &v1.AddQuestionRequest{
+			Content: &question,
+			Title:   &question,
+			Tags:    tags,
+		}
+		_, err := s.AddQuestion(ctx, request, token)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 // DeleteBatchQuestion 批量删除问题
