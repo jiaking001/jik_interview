@@ -29,6 +29,8 @@ type QuestionService interface {
 	SearchQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
 	// 批量删除问题
 	DeleteBatchQuestion(ctx context.Context, req *v1.BatchDeleteQuestionRequest) (bool, error)
+	// 通过 AI 生成题目
+	AddQuestionByAI(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error)
 }
 
 // NewQuestionService 创建一个新的问题服务实例
@@ -46,6 +48,15 @@ func NewQuestionService(
 type questionService struct {
 	*Service
 	questionRepository repository.QuestionRepository
+}
+
+func (s *questionService) AddQuestionByAI(ctx context.Context, req *v1.AddQuestionRequest, token string) (string, error) {
+	// 将生成的题目添加到数据库
+	questionId, err := s.AddQuestion(ctx, req, token)
+	if err != nil {
+		return "", err
+	}
+	return questionId, nil
 }
 
 // DeleteBatchQuestion 批量删除问题

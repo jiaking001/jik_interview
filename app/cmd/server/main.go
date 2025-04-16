@@ -10,6 +10,7 @@ import (
 	"app/cmd/server/wire"
 	"app/pkg/config"
 	"app/pkg/log"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -29,6 +30,8 @@ import (
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
+	// 初始化环境变量
+	_ = godotenv.Load()
 	// 初始化 Sentinel
 	middleware.InitSentinel()
 	// 初始化黑名单
