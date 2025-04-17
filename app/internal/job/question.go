@@ -50,7 +50,7 @@ func (t questionJob) DataToElasticsearch(ctx context.Context) error {
 }
 
 func syncDataToElasticsearch(ctx context.Context, t questionJob) error {
-	fiveMinutesAgo := time.Now().Add(-5 * time.Minute)
+	fiveMinutesAgo := time.Now().Add(-60 * time.Minute)
 	question, err := t.questionRepo.GetAllQuestion(ctx, fiveMinutesAgo)
 	if err != nil {
 		return err

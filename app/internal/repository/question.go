@@ -71,7 +71,7 @@ func (r *questionRepository) DeleteBatchQuestion(ctx context.Context, questions 
 	for i := 0; i < len(questions); i += 1000 {
 		for j := i; j < i+1000 && j < len(questions); j++ {
 			// 逻辑删除
-			if err := tx.Where("id = ?", questions[j]).Update("is_delete", "1").Error; err != nil {
+			if err := tx.Table("question").Where("id = ?", questions[j]).Update("is_delete", "1").Error; err != nil {
 				tx.Rollback()
 				return err
 			}

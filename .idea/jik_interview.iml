@@ -6,7 +6,13 @@
     </buildTags>
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/app/deploy/docker-compose/conf" />
+      <excludeFolder url="file://$MODULE_DIR$/app/deploy/docker-compose/data" />
+      <excludeFolder url="file://$MODULE_DIR$/app/storage/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/app_frontend/.next" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

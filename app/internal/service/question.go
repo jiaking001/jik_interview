@@ -85,10 +85,23 @@ func (s *questionService) AddQuestionByAI(ctx context.Context, req *v1.AddQuesti
 		}
 	}
 	// 5.将生成的题目添加到数据库
+	systemPrompt = "你是一位专业的程序员面试官，我会给你一道面试题，请帮我生成详细的题解。要求如下：\n" +
+		"\n" +
+		"1. 题解的语句要自然流畅\n" +
+		"2. 题解可以先给出总结性的回答，再详细解释\n" +
+		"3. 要使用 Markdown 语法输出\n" +
+		"\n" +
+		"除此之外，请不要输出任何多余的内容，不要输出开头、也不要输出结尾，只输出题解。\n" +
+		"\n" +
+		"接下来我会给你要生成的面试题\n"
 	tags := make([]string, 0)
 	tags = append(tags, req.Direction)
 	for _, question := range result {
+		userPrompt = fmt.Sprintf("题目：%s\n", question)
+		// 调用 AI 生成题解
+		answer := ai.DoChat(systemPrompt, userPrompt)
 		var request = &v1.AddQuestionRequest{
+			Answer:  &answer,
 			Content: &question,
 			Title:   &question,
 			Tags:    tags,
@@ -341,7 +354,7 @@ func (s *questionService) AddQuestion(ctx context.Context, req *v1.AddQuestionRe
 		return "", err
 	}
 
-	if *req.Title == "" {
+	if req.Title == nil || *req.Title == "" {
 		return "", v1.ErrIllegalAccount
 	}
 	questionBank, err := s.questionRepository.GetByTitle(ctx, *req.Title)

@@ -5,7 +5,7 @@ const PROD = "https://jiaking.top"
 // 创建 Axios 示例
 const myAxios = axios.create({
     baseURL: DEV,
-    timeout: 10000,
+    timeout: 60000,
     withCredentials: true,
 });
 

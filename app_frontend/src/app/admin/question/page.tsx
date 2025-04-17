@@ -292,6 +292,15 @@ const QuestionAdminPage: React.FC = () => {
         }}
         toolBarRender={() => [
           <Button
+              type="primary"
+              ghost
+              key="primary"
+              href="/admin/question/ai"
+              target="_blank"
+          >
+            <PlusOutlined /> AI 生成题目
+          </Button>,
+          <Button
             type="primary"
             key="primary"
             onClick={() => {
