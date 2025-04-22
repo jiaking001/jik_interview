@@ -108,3 +108,9 @@ type SearchResult struct {
 type BatchDeleteQuestionRequest struct {
 	QuestionIdList []string `json:"questionIdList,omitempty"`
 }
+
+// AddQuestionByAIRequest 通过 AI 生成题目
+type AddQuestionByAIRequest struct {
+	Number    int    `json:"number,omitempty"`    // 题目数量
+	Direction string `json:"direction,omitempty"` // 题目方向
+}
