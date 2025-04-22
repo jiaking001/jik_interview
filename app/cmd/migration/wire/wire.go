@@ -20,6 +20,7 @@ var repositorySet = wire.NewSet(
 	repository.NewQuestionRepository,
 	repository.NewQuestionBankRepository,
 	repository.NewQuestionBankQuestionRepository,
+	repository.NewMockInterviewRepository,
 )
 var serverSet = wire.NewSet(
 	server.NewMigrateServer,
