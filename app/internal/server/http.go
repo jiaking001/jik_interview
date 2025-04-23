@@ -29,6 +29,7 @@ func NewHTTPServer(
 	userHandler *handler.UserHandler,
 	questionHandler *handler.QuestionHandler,
 	questionBankHandler *handler.QuestionBankHandler,
+	mockInterviewHandler *handler.MockInterviewHandler,
 	questionBankQuestionHandler *handler.QuestionBankQuestionHandler,
 ) *http.Server {
 	gin.SetMode(gin.DebugMode)
@@ -108,6 +109,10 @@ func NewHTTPServer(
 			question.POST("/search/page/vo", questionHandler.SearchPageVo)
 			question.POST("/delete/batch", questionHandler.DeleteBatchQuestion)
 			question.POST("/ai/generate/question", questionHandler.AiGenerateQuestion)
+
+			// 模拟面试模块
+			mockInterview := noAuthRouter.Group("/mockInterview")
+			mockInterview.POST("/add", mockInterviewHandler.AddMockInterview)
 
 			// 题目题库模块
 			questionBankQuestion := noAuthRouter.Group("/questionBankQuestion")

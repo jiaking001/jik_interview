@@ -8,6 +8,8 @@ import (
 	"app/pkg/utils"
 	"context"
 	"fmt"
+	chatModel "github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
+	"github.com/volcengine/volcengine-go-sdk/volcengine"
 	"strconv"
 	"strings"
 )
@@ -67,7 +69,20 @@ func (s *questionService) AddQuestionByAI(ctx context.Context, req *v1.AddQuesti
 	// 2.定义用户 Prompt
 	userPrompt := fmt.Sprintf("数量：%d\n方向：%s\n", req.Number, req.Direction)
 	// 3.调用 AI 生成题目
-	questions := ai.DoChat(systemPrompt, userPrompt)
+	questions := ai.DoChat([]*chatModel.ChatCompletionMessage{
+		{
+			Role: chatModel.ChatMessageRoleSystem,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(systemPrompt),
+			},
+		},
+		{
+			Role: chatModel.ChatMessageRoleUser,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(userPrompt),
+			},
+		},
+	})
 	// 4.对题目进行预处理
 	lines := strings.Split(questions, "\n")
 	var result []string

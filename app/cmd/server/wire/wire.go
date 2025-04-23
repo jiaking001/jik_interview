@@ -28,6 +28,7 @@ var repositorySet = wire.NewSet(
 	repository.NewQuestionBankRepository,
 	repository.NewQuestionRepository,
 	repository.NewQuestionBankQuestionRepository,
+	repository.NewMockInterviewRepository,
 )
 
 var serviceSet = wire.NewSet(
@@ -36,6 +37,7 @@ var serviceSet = wire.NewSet(
 	service.NewQuestionBankService,
 	service.NewQuestionService,
 	service.NewQuestionBankQuestionService,
+	service.NewMockInterviewService,
 )
 
 var handlerSet = wire.NewSet(
@@ -44,6 +46,7 @@ var handlerSet = wire.NewSet(
 	handler.NewQuestionBankHandler,
 	handler.NewQuestionHandler,
 	handler.NewQuestionBankQuestionHandler,
+	handler.NewMockInterviewHandler,
 )
 
 var jobSet = wire.NewSet(

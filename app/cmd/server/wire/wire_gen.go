@@ -42,10 +42,13 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 	questionBankRepository := repository.NewQuestionBankRepository(repositoryRepository)
 	questionBankService := service.NewQuestionBankService(serviceService, questionBankRepository)
 	questionBankHandler := handler.NewQuestionBankHandler(handlerHandler, questionBankService, questionService)
+	mockInterviewRepository := repository.NewMockInterviewRepository(repositoryRepository)
+	mockInterviewService := service.NewMockInterviewService(serviceService, mockInterviewRepository)
+	mockInterviewHandler := handler.NewMockInterviewHandler(handlerHandler, mockInterviewService)
 	questionBankQuestionRepository := repository.NewQuestionBankQuestionRepository(repositoryRepository)
 	questionBankQuestionService := service.NewQuestionBankQuestionService(serviceService, questionBankQuestionRepository)
 	questionBankQuestionHandler := handler.NewQuestionBankQuestionHandler(handlerHandler, questionBankQuestionService)
-	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, client, db, userHandler, questionHandler, questionBankHandler, questionBankQuestionHandler)
+	httpServer := server.NewHTTPServer(logger, viperViper, jwtJWT, client, db, userHandler, questionHandler, questionBankHandler, mockInterviewHandler, questionBankQuestionHandler)
 	jobJob := job.NewJob(transaction, logger, sidSid)
 	userJob := job.NewUserJob(jobJob, userRepository)
 	questionJob := job.NewQuestionJob(jobJob, questionRepository)
@@ -57,11 +60,11 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 
 // wire.go:
 
-var repositorySet = wire.NewSet(repository.NewDB, repository.NewRedis, repository.NewElasticsearch, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository, repository.NewQuestionBankQuestionRepository)
+var repositorySet = wire.NewSet(repository.NewDB, repository.NewRedis, repository.NewElasticsearch, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewQuestionBankRepository, repository.NewQuestionRepository, repository.NewQuestionBankQuestionRepository, repository.NewMockInterviewRepository)
 
-var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewQuestionBankService, service.NewQuestionService, service.NewQuestionBankQuestionService)
+var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewQuestionBankService, service.NewQuestionService, service.NewQuestionBankQuestionService, service.NewMockInterviewService)
 
-var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewQuestionBankHandler, handler.NewQuestionHandler, handler.NewQuestionBankQuestionHandler)
+var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewQuestionBankHandler, handler.NewQuestionHandler, handler.NewQuestionBankQuestionHandler, handler.NewMockInterviewHandler)
 
 var jobSet = wire.NewSet(job.NewJob, job.NewUserJob, job.NewQuestionJob)
 
