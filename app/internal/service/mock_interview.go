@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	chatModel "github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/volcengine"
+	"strings"
 	"time"
 )
 
@@ -102,35 +103,41 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		// 定义用户 Prompt
 		userPrompt := "开始"
 		// 调用AI接口开始面试
-		result := ai.DoChat([]*chatModel.ChatCompletionMessage{
-			{
-				Role: chatModel.ChatMessageRoleSystem,
-				Content: &chatModel.ChatCompletionMessageContent{
-					StringValue: volcengine.String(systemPrompt),
-				},
-			},
-			{
-				Role: chatModel.ChatMessageRoleUser,
-				Content: &chatModel.ChatCompletionMessageContent{
-					StringValue: volcengine.String(userPrompt),
-				},
+		var chatMessages []*chatModel.ChatCompletionMessage
+		// 添加系统预设
+		chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
+			Role: chatModel.ChatMessageRoleSystem,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(systemPrompt),
 			},
 		})
+		// 添加用户预设
+		chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
+			Role: chatModel.ChatMessageRoleUser,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(userPrompt),
+			},
+		})
+		result := ai.DoChat(chatMessages)
 		// 将AI的回复序列化成json
-		chatMessage := model.MockInterviewMessage{
-			Role:    "assistant", //角色
-			Content: result,      // AI的回复
-		}
-		jsonStr, err := json.Marshal(chatMessage)
+		chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
+			Role: chatModel.ChatMessageRoleAssistant,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(result),
+			},
+		})
+		jsonStr, err := json.Marshal(chatMessages)
 		if err != nil {
 			return "", err
 		}
 		// 将AI的回复记录到数据库
-		interview := &model.MockInterview{
-			ID:       req.ID,
-			Messages: string(jsonStr),
+		mockInterview.ID = req.ID
+		mockInterview.Messages = string(jsonStr)
+		mockInterview.Status = 1 // 进行中
+		err = m.mockInterviewRepository.UpdateMockInterview(ctx, mockInterview)
+		if err != nil {
+			return "", err
 		}
-		err = m.mockInterviewRepository.UpdateMockInterview(ctx, interview)
 		return result, nil
 	// 进行模拟面试
 	case "chat":
@@ -143,6 +150,9 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		// 将历史消息记录反序列化
 		var historyChatMessages []model.MockInterviewMessage
 		err = json.Unmarshal([]byte(historyMessages), &historyChatMessages)
+		if err != nil {
+			return "", err
+		}
 		var chatMessages []*chatModel.ChatCompletionMessage
 		for _, message := range historyChatMessages {
 			chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
@@ -163,21 +173,26 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		// 调用AI接口结束面试
 		result := ai.DoChat(chatMessages)
 		// 将AI的回复序列化成json
-		chatMessage := model.MockInterviewMessage{
-			Role:    "assistant", //角色
-			Content: result,      // AI的回复
-		}
-		jsonStr, err := json.Marshal(chatMessage)
+		chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
+			Role: chatModel.ChatMessageRoleAssistant,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(result),
+			},
+		})
+		jsonStr, err := json.Marshal(chatMessages)
 		if err != nil {
 			return "", err
 		}
 		// 将AI的回复记录到数据库
-		interview := &model.MockInterview{
-			Status:   1, // 进行中
-			ID:       req.ID,
-			Messages: string(jsonStr),
+		if strings.Contains(result, "【面试结束】") {
+			mockInterview.Status = 2 // 结束
 		}
-		err = m.mockInterviewRepository.UpdateMockInterview(ctx, interview)
+		mockInterview.ID = req.ID
+		mockInterview.Messages = string(jsonStr)
+		err = m.mockInterviewRepository.UpdateMockInterview(ctx, mockInterview)
+		if err != nil {
+			return "", err
+		}
 		return result, nil
 	// 结束模拟面试
 	case "end":
@@ -190,6 +205,9 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		// 将历史消息记录反序列化
 		var historyChatMessages []model.MockInterviewMessage
 		err = json.Unmarshal([]byte(historyMessages), &historyChatMessages)
+		if err != nil {
+			return "", err
+		}
 		var chatMessages []*chatModel.ChatCompletionMessage
 		for _, message := range historyChatMessages {
 			chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
@@ -210,21 +228,24 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		// 调用AI接口结束面试
 		result := ai.DoChat(chatMessages)
 		// 将AI的回复序列化成json
-		chatMessage := model.MockInterviewMessage{
-			Role:    "assistant", //角色
-			Content: result,      // AI的回复
-		}
-		jsonStr, err := json.Marshal(chatMessage)
+		chatMessages = append(chatMessages, &chatModel.ChatCompletionMessage{
+			Role: chatModel.ChatMessageRoleAssistant,
+			Content: &chatModel.ChatCompletionMessageContent{
+				StringValue: volcengine.String(result),
+			},
+		})
+		jsonStr, err := json.Marshal(chatMessages)
 		if err != nil {
 			return "", err
 		}
 		// 将AI的回复记录到数据库
-		interview := &model.MockInterview{
-			Status:   2, // 已结束
-			ID:       req.ID,
-			Messages: string(jsonStr),
+		mockInterview.ID = req.ID
+		mockInterview.Messages = string(jsonStr)
+		mockInterview.Status = 2 // 结束
+		err = m.mockInterviewRepository.UpdateMockInterview(ctx, mockInterview)
+		if err != nil {
+			return "", err
 		}
-		err = m.mockInterviewRepository.UpdateMockInterview(ctx, interview)
 		return result, nil
 	}
 

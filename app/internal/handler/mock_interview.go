@@ -62,3 +62,19 @@ func (h *MockInterviewHandler) GetMockInterview(ctx *gin.Context) {
 
 	v1.HandleSuccess(ctx, ok)
 }
+
+func (h *MockInterviewHandler) MockInterview(ctx *gin.Context) {
+	var req v1.MockInterviewEventRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.mockInterviewService.MockInterview(ctx, &req)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, ok)
+}
