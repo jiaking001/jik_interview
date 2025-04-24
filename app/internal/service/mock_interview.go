@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	chatModel "github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/volcengine"
 	"time"
@@ -16,7 +17,7 @@ import (
 type MockInterviewService interface {
 	MockInterview(ctx context.Context, req *v1.MockInterviewEventRequest) (string, error)
 	AddMockInterview(ctx context.Context, req *v1.MockInterviewAddRequest, token string) (uint64, error)
-	// GetMockInterview(ctx context.Context, req *v1.MockInterviewGetRequest) (v1.MockInterview, error)
+	GetMockInterview(ctx *gin.Context, v *v1.MockInterviewGetRequest) (v1.MockInterview, error)
 }
 
 func NewMockInterviewService(
@@ -32,6 +33,26 @@ func NewMockInterviewService(
 type mockInterviewService struct {
 	*Service
 	mockInterviewRepository repository.MockInterviewRepository
+}
+
+func (m mockInterviewService) GetMockInterview(ctx *gin.Context, req *v1.MockInterviewGetRequest) (v1.MockInterview, error) {
+	mockInterview, err := m.mockInterviewRepository.GetMockInterview(ctx, req.ID)
+	if err != nil {
+		return v1.MockInterview{}, err
+	}
+
+	return v1.MockInterview{
+		CreateTime:     mockInterview.CreateTime,
+		Difficulty:     mockInterview.Difficulty,
+		ID:             mockInterview.ID,
+		IsDelete:       mockInterview.IsDelete,
+		JobPosition:    mockInterview.JobPosition,
+		Messages:       mockInterview.Messages,
+		Status:         mockInterview.Status,
+		UpdateTime:     mockInterview.UpdateTime,
+		UserID:         mockInterview.UserID,
+		WorkExperience: mockInterview.WorkExperience,
+	}, nil
 }
 
 // AddMockInterview 添加模拟面试

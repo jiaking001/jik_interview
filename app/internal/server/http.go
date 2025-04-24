@@ -113,6 +113,7 @@ func NewHTTPServer(
 			// 模拟面试模块
 			mockInterview := noAuthRouter.Group("/mockInterview")
 			mockInterview.POST("/add", mockInterviewHandler.AddMockInterview)
+			mockInterview.GET("/get", mockInterviewHandler.GetMockInterview)
 
 			// 题目题库模块
 			questionBankQuestion := noAuthRouter.Group("/questionBankQuestion")

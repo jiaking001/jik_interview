@@ -34,5 +34,5 @@ type MockInterviewAddRequest struct {
 
 // MockInterviewGetRequest 获取模拟面试信息
 type MockInterviewGetRequest struct {
-	ID uint64 `json:"id,omitempty"` // 面试 ID
+	ID uint64 `form:"id,omitempty"` // 面试 ID
 }
