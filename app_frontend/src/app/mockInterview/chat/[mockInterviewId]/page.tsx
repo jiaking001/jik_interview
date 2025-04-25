@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import "./index.css";
 
 interface Message {
+  role: string;
   content: string;
   isAI: boolean;
   timestamp: number;
@@ -66,12 +67,14 @@ export default function InterviewRoomPage({ params }) {
       const newMessage: Message = {
         content: msg || (eventType === "start" ? "面试开始" : "面试结束"),
         isAI: false,
+        role: "user",
         timestamp: Date.now(),
       };
 
       const aiResponse: Message = {
         content: res.data || "收到请求",
         isAI: true,
+        role: "assistant",
         timestamp: Date.now() + 1,
       } as any;
 
@@ -130,22 +133,28 @@ export default function InterviewRoomPage({ params }) {
       {/* 消息列表 */}
       <Card className="message-area">
         <List
-          dataSource={messages}
-          split={false}
-          renderItem={(item) => (
-            <List.Item
-              style={{
-                justifyContent: item.isAI ? "flex-start" : "flex-end",
-              }}
-            >
-              <div className={`message-bubble ${item.isAI ? "ai" : "user"}`}>
-                <div className="message-content">{item.content}</div>
-                <div className="message-time">
-                  {new Date(item.timestamp).toLocaleTimeString()}
-                </div>
-              </div>
-            </List.Item>
-          )}
+            dataSource={messages}
+            split={false}
+            renderItem={(item) => {
+              // 只渲染 role 为 "assistant" 或 "user" 的消息
+              if (item.role === "assistant" || item.role === "user") {
+                return (
+                    <List.Item
+                        style={{
+                          justifyContent: item.role === "assistant" ? "flex-start" : "flex-end",
+                        }}
+                    >
+                      <div className={`message-bubble ${item.role}`}>
+                        <div className="message-content">{item.content}</div>
+                        <div className="message-time">
+                          {new Date(item.timestamp).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </List.Item>
+                );
+              }
+              return null; // 忽略其他 role 的消息
+            }}
         />
       </Card>
 
