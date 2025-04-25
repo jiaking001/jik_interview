@@ -10,6 +10,7 @@ type MockInterviewRepository interface {
 	GetMockInterview(ctx context.Context, id uint64) (*model.MockInterview, error)
 	AddMockInterview(ctx context.Context, interview v1.MockInterview) (uint64, error)
 	UpdateMockInterview(ctx context.Context, interview *model.MockInterview) error
+	ListMockInterview(ctx context.Context, userId uint64) ([]model.MockInterview, error)
 }
 
 func NewMockInterviewRepository(
@@ -22,6 +23,14 @@ func NewMockInterviewRepository(
 
 type mockInterviewRepository struct {
 	*Repository
+}
+
+func (r *mockInterviewRepository) ListMockInterview(ctx context.Context, userId uint64) ([]model.MockInterview, error) {
+	var mockInterviews []model.MockInterview
+	if err := r.DB(ctx).Where("user_id = ?", userId).Find(&mockInterviews).Error; err != nil {
+		return nil, err
+	}
+	return mockInterviews, nil
 }
 
 func (r *mockInterviewRepository) UpdateMockInterview(ctx context.Context, interview *model.MockInterview) error {

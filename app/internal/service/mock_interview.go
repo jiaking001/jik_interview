@@ -19,6 +19,7 @@ type MockInterviewService interface {
 	MockInterview(ctx context.Context, req *v1.MockInterviewEventRequest) (string, error)
 	AddMockInterview(ctx context.Context, req *v1.MockInterviewAddRequest, token string) (uint64, error)
 	GetMockInterview(ctx *gin.Context, v *v1.MockInterviewGetRequest) (v1.MockInterview, error)
+	ListMockInterview(ctx *gin.Context, v *v1.MockInterviewQueryRequest, token string) (*v1.PageMockInterview, error)
 }
 
 func NewMockInterviewService(
@@ -34,6 +35,39 @@ func NewMockInterviewService(
 type mockInterviewService struct {
 	*Service
 	mockInterviewRepository repository.MockInterviewRepository
+}
+
+func (m mockInterviewService) ListMockInterview(ctx *gin.Context, req *v1.MockInterviewQueryRequest, token string) (*v1.PageMockInterview, error) {
+	// 解析 token
+	claims, err := m.jwt.ParseToken(token)
+	if err != nil {
+		return nil, err
+	}
+	// 获取用户 ID
+	userId := claims.User.ID
+
+	mockInterviews, err := m.mockInterviewRepository.ListMockInterview(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	var records []v1.MockInterview
+	for _, mockInterview := range mockInterviews {
+		records = append(records, v1.MockInterview{
+			CreateTime:     mockInterview.CreateTime,
+			Difficulty:     mockInterview.Difficulty,
+			ID:             mockInterview.ID,
+			IsDelete:       mockInterview.IsDelete,
+			JobPosition:    mockInterview.JobPosition,
+			Messages:       mockInterview.Messages,
+			Status:         mockInterview.Status,
+			UpdateTime:     mockInterview.UpdateTime,
+			UserID:         mockInterview.UserID,
+			WorkExperience: mockInterview.WorkExperience,
+		})
+	}
+	return &v1.PageMockInterview{
+		Records: records,
+	}, nil
 }
 
 func (m mockInterviewService) GetMockInterview(ctx *gin.Context, req *v1.MockInterviewGetRequest) (v1.MockInterview, error) {

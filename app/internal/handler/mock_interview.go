@@ -78,3 +78,27 @@ func (h *MockInterviewHandler) MockInterview(ctx *gin.Context) {
 
 	v1.HandleSuccess(ctx, ok)
 }
+
+func (h *MockInterviewHandler) ListPage(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	t := session.Get("user_login")
+	if t == nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, v1.NotLoginError, nil)
+		return
+	}
+	token := t.(string)
+
+	var req v1.MockInterviewQueryRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
+		return
+	}
+
+	ok, err := h.mockInterviewService.ListMockInterview(ctx, &req, token)
+	if err != nil {
+		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	v1.HandleSuccess(ctx, ok)
+}
