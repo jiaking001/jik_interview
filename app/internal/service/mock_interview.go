@@ -95,7 +95,8 @@ func (m mockInterviewService) MockInterview(ctx context.Context, req *v1.MockInt
 		"1. 当学员回复 “开始” 时，你要正式开始面试\n"+
 		"2. 当学员表示希望 “结束面试” 时，你要结束面试\n"+
 		"3. 此外，当你觉得这场面试可以结束时（比如候选人回答结果较差、不满足工作年限的招聘需求、或者候选人态度不礼貌），必须主动提出面试结束，不用继续询问更多问题了。并且要在回复中包含字符串【面试结束】\n"+
-		"4. 面试结束后，应该给出候选人整场面试的表现和总结。", mockInterview.WorkExperience, mockInterview.JobPosition, mockInterview.Difficulty)
+		"4. 面试结束后，应该给出候选人整场面试的表现和总结。\n"+
+		"5. 使用纯文本回复", mockInterview.WorkExperience, mockInterview.JobPosition, mockInterview.Difficulty)
 
 	switch req.Event {
 	// 开始模拟面试
