@@ -1,13 +1,13 @@
 "use client";
-import {Avatar, Card, Col, Row} from "antd";
-import {useSelector} from "react-redux";
-import {RootState} from "@/stores";
+import { Avatar, Card, Col, Row } from "antd";
+import { useSelector } from "react-redux";
+import { RootState } from "@/stores";
 import Title from "antd/es/typography/Title";
 import Paragraph from "antd/es/typography/Paragraph";
-import React, {useState} from "react";
-import CalendarChart from "@/app/user/center/components/CalendarChart";
+import React, { useState } from "react";
+import CalendarChart from "@/app/user/center/components/CalendarChart/page";
+import InterviewRoomPage from "@/app/user/center/components/InterviewRoomPage/page"; // 假设 InterviewRoomPage 是模拟面试记录的组件
 import "./index.css";
-import {router} from "next/client";
 
 /**
  * 用户中心页面
@@ -26,12 +26,12 @@ export default function UserCenterPage() {
         <div id="userCenterPage" className="max-width-content">
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={6}>
-                    <Card style={{textAlign: "center"}}>
-                        <Avatar src={user.userAvatar || "/assets/notLoginUser.png"} size={72}/>
-                        <div style={{marginBottom: 16}}/>
+                    <Card style={{ textAlign: "center" }}>
+                        <Avatar src={user.userAvatar || "/assets/notLoginUser.png"} size={72} />
+                        <div style={{ marginBottom: 16 }} />
                         <Card.Meta
                             title={
-                                <Title level={4} style={{marginBottom: 0}}>
+                                <Title level={4} style={{ marginBottom: 0 }}>
                                     {user.userName}
                                 </Title>
                             }
@@ -49,6 +49,10 @@ export default function UserCenterPage() {
                                 label: "刷题记录",
                             },
                             {
+                                key: "mock-interview",
+                                label: "模拟面试记录", // 新增模拟面试记录 Tab
+                            },
+                            {
                                 key: "others",
                                 label: "其他",
                             },
@@ -60,7 +64,12 @@ export default function UserCenterPage() {
                     >
                         {activeTabKey === "record" && (
                             <>
-                                <CalendarChart/>
+                                <CalendarChart />
+                            </>
+                        )}
+                        {activeTabKey === "mock-interview" && (
+                            <>
+                                <InterviewRoomPage />
                             </>
                         )}
                         {activeTabKey === "others" && <>敬请期待</>}
