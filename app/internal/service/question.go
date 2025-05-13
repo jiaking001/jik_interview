@@ -27,7 +27,7 @@ type QuestionService interface {
 	// 根据题库ID获取问题列表
 	ListQuestionByBankId(ctx context.Context, bankId uint64) (v1.PageQuestionVO, error)
 	// 根据问题ID获取问题
-	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error)
+	GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest, isHot any, cacheKey any) (v1.QuestionVO, error)
 	// 根据页码获取问题列表（VO）
 	ListQuestionVoByPage(ctx context.Context, req *v1.QuestionRequest) (v1.PageQuestionVO, error)
 	// 根据页码和关键词搜索问题列表（VO）
@@ -216,7 +216,7 @@ func (s *questionService) ListQuestionVoByPage(ctx context.Context, req *v1.Ques
 }
 
 // GetQuestionById 根据问题ID获取问题
-func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest) (v1.QuestionVO, error) {
+func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuestionRequest, isHot any, cacheKey any) (v1.QuestionVO, error) {
 	if req.ID == nil || *req.ID == "" {
 		return v1.QuestionVO{}, v1.ParamsError
 	}
@@ -225,7 +225,7 @@ func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuesti
 	if err != nil {
 		return v1.QuestionVO{}, v1.ParamsError
 	}
-	question, err := s.questionRepository.GetByID(ctx, id)
+	question, err := s.questionRepository.GetByID(ctx, id, isHot, cacheKey)
 	if err != nil {
 		return v1.QuestionVO{}, err
 	}
@@ -236,6 +236,7 @@ func (s *questionService) GetQuestionById(ctx context.Context, req *v1.GetQuesti
 	}
 
 	userId := strconv.FormatUint(question.UserID, 10)
+
 	return v1.QuestionVO{
 		Answer:     question.Answer,
 		Content:    question.Content,
@@ -295,7 +296,8 @@ func (s *questionService) UpdateQuestion(ctx context.Context, req *v1.UpdateQues
 	if err != nil {
 		return false, v1.ParamsError
 	}
-	question, err := s.questionRepository.GetByID(ctx, id)
+	cacheKey := fmt.Sprintf("question:cache:%d", id)
+	question, err := s.questionRepository.GetByID(ctx, id, true, cacheKey)
 	if err != nil {
 		return false, err
 	}
@@ -333,7 +335,7 @@ func (s *questionService) DeleteQuestion(ctx context.Context, req *v1.DeleteQues
 	if err != nil {
 		return false, v1.ParamsError
 	}
-	bank, err := s.questionRepository.GetByID(ctx, id)
+	bank, err := s.questionRepository.GetByID(ctx, id, false, nil)
 	if err != nil {
 		return false, err
 	}

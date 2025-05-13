@@ -105,7 +105,12 @@ func (h *QuestionHandler) GetQuestion(ctx *gin.Context) {
 		v1.HandleError(ctx, http.StatusBadRequest, v1.ErrBadRequest, nil)
 		return
 	}
-	question, err := h.questionService.GetQuestionById(ctx, &req)
+
+	// 获取题目热度信息
+	isHot, _ := ctx.Get("isHot")
+	cacheKey, _ := ctx.Get("cacheKey")
+
+	question, err := h.questionService.GetQuestionById(ctx, &req, isHot, cacheKey)
 	if err != nil {
 		v1.HandleError(ctx, http.StatusUnauthorized, err, nil)
 		return

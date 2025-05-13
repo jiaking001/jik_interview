@@ -31,7 +31,7 @@ type QuestionRepository interface {
 	// 根据标题获取问题
 	GetByTitle(ctx context.Context, title string) (*model.Question, error)
 	// 根据ID获取问题
-	GetByID(ctx context.Context, id uint64) (*model.Question, error)
+	GetByID(ctx context.Context, id uint64, isHot any, cacheKey any) (*model.Question, error)
 	// 根据ID删除问题
 	DeleteById(ctx context.Context, question *model.Question, id uint64) error
 	// 更新问题
@@ -327,7 +327,7 @@ func (r *questionRepository) DeleteById(ctx context.Context, question *model.Que
 }
 
 // GetByID 根据ID获取问题
-func (r *questionRepository) GetByID(ctx context.Context, id uint64) (*model.Question, error) {
+func (r *questionRepository) GetByID(ctx context.Context, id uint64, isHot any, cacheKey any) (*model.Question, error) {
 	var question model.Question
 	if err := r.DB(ctx).Where("id = ?", id).First(&question).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -335,6 +335,29 @@ func (r *questionRepository) GetByID(ctx context.Context, id uint64) (*model.Que
 		}
 		return nil, err
 	}
+
+	// 判断是否为热点数据
+	if isHot != nil && cacheKey != nil {
+		if isHot.(bool) {
+			// 写入缓存（序列化为JSON字符串）
+			qid := utils.Uint64TOString(question.ID)
+			tags, _ := utils.StringToStrings(*question.Tags)
+			uid := utils.Uint64TOString(question.UserID)
+			questionVo := v1.QuestionVO{
+				Answer:     question.Answer,
+				Content:    question.Content,
+				CreateTime: &question.CreateTime,
+				ID:         &qid,
+				TagList:    tags,
+				Title:      question.Title,
+				UpdateTime: &question.UpdateTime,
+				UserID:     &uid,
+			}
+			data, _ := json.Marshal(questionVo)
+			r.rdb.Set(ctx, cacheKey.(string), data, time.Hour) // 缓存1小时
+		}
+	}
+
 	return &question, nil
 }
 

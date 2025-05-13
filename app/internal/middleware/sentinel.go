@@ -19,21 +19,21 @@ func InitSentinel() {
 		// 对查看题库列表限流
 		{
 			Resource:               "POST:/api/questionBank/list/page/vo",
-			Threshold:              60, // 每秒最多允许60个请求
+			Threshold:              1000, // 每秒最多允许60个请求
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
 		},
 		// 对查看题目列表限流
 		{
 			Resource:               "POST:/api/question/list/page/vo",
-			Threshold:              60, // 每秒最多允许60个请求
+			Threshold:              1000, // 每秒最多允许60个请求
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
 		},
 		// 对搜索题目列表限流
 		{
 			Resource:               "POST:/api/question/search/page/vo",
-			Threshold:              60, // 每秒最多允许60个请求
+			Threshold:              1000, // 每秒最多允许60个请求
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
 		},
@@ -41,14 +41,14 @@ func InitSentinel() {
 		// 对登录限流
 		{
 			Resource:               "POST:/api/user/login",
-			Threshold:              60, // 每秒最多允许60个请求
+			Threshold:              1000, // 每秒最多允许60个请求
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
 		},
 		// 对注册限流
 		{
 			Resource:               "POST:/api/user/register",
-			Threshold:              60, // 每秒最多允许60个请求
+			Threshold:              1000, // 每秒最多允许60个请求
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
 		},
