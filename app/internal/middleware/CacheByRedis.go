@@ -20,7 +20,7 @@ func CacheByRedis(rdb *redis.Client) gin.HandlerFunc {
 		questionID := *req.ID
 		cacheKey := fmt.Sprintf("question:cache:%s", questionID)
 		countKey := fmt.Sprintf("question:count:%s", questionID)
-		hotThreshold := 0
+		hotThreshold := 100
 
 		// 访问次数加一
 		rdb.Incr(ctx, countKey)

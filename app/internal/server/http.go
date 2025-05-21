@@ -106,6 +106,7 @@ func NewHTTPServer(
 			question.POST("/delete", questionHandler.DeleteQuestion)
 			question.POST("/update", questionHandler.UpdateQuestion)
 			question.GET("/get/vo", middleware.CacheByRedis(rdb), questionHandler.GetQuestion)
+			question.GET("/get/vo/test", questionHandler.GetQuestion)
 			question.POST("/search/page/vo", questionHandler.SearchPageVo)
 			question.POST("/delete/batch", questionHandler.DeleteBatchQuestion)
 			question.POST("/ai/generate/question", questionHandler.AiGenerateQuestion)
